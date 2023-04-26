@@ -25,11 +25,11 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, first_name, last_name, username, email, password=None):
         user = self.create_user(
-            email = self.normalize_email(email),
-            username = username,
-            password = password,
-            first_name = first_name,
-            last_name = last_name,
+            email=self.normalize_email(email),
+            username=username,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
         )
         user.is_admin = True
         user.is_active = True
@@ -77,6 +77,15 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+
+    def get_role(self):
+        if self.role == 1:
+            user_role = 'Vendor'
+        elif self.role == 2:
+            user_role = 'Customer'
+        else:
+            user_role = None
+        return user_role
 
 
 class UserProfile(models.Model):

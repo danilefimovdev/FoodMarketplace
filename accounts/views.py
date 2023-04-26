@@ -1,8 +1,11 @@
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
 from accounts.forms import UserForm
 from accounts.models import User, UserProfile
-from django.contrib import messages
+from django.contrib import messages, auth
 
+from accounts.utils import detect_user
 from vendors.forms import VendorForm
 
 
@@ -12,7 +15,10 @@ from vendors.forms import VendorForm
     #   if user is already autorized.
 
 def registerUser(request):
-    if request.method == 'POST':
+    if request.user.is_authenticated:
+        messages.info(request, f'You are already logged in as "{request.user.username}"')
+        return redirect('register-user')
+    elif request.method == 'POST':
         print(request.POST)
         form = UserForm(request.POST)
         if form.is_valid():
@@ -41,7 +47,10 @@ def registerUser(request):
     #   Get these information from autorized user.
 def registerVendor(request):
     # TODO do refactor this part of code
-    if request.method == 'POST':
+    if request.user.is_authenticated:
+        messages.info(request, f'You are already logged in as "{request.user.username}"')
+        return redirect('register-user')
+    elif request.method == 'POST':
         form = UserForm(request.POST)
         v_form = VendorForm(request.POST, request.FILES)
         if form.is_valid() and v_form.is_valid():
@@ -68,4 +77,51 @@ def registerVendor(request):
             'form': form,
             'v_form': v_form,
         }
-    return render(request, 'accounts/registerVendor.html', context=context)
+        return render(request, 'accounts/registerVendor.html', context=context)
+
+
+def logout(request):
+    if not request.user.is_authenticated:
+        messages.info(request, 'You are not logged in')
+    auth.logout(request)
+    messages.info(request, 'You logged out')
+    return redirect('login')
+
+
+    #TODO add ability to login either username or email
+def login(request):
+    if request.user.is_authenticated:
+        messages.info(request, f'You are already logged in as "{request.user.username}"')
+        return redirect('register-user')
+
+    elif request.method == 'POST':
+        email = request.POST['email']
+        password = request.POST['password']
+        user = auth.authenticate(email=email, password=password)
+
+        if user is not None:
+            auth.login(request, user)
+            messages.success(request, 'You are logged in')
+            return redirect('my-account')
+        else:
+            messages.warning(request, 'You put invalid password or email')
+            return redirect('login')
+    else:
+        return render(request, 'accounts/login.html')
+
+@login_required(login_url='login')
+def my_account(request):
+    redirect_url = detect_user(request.user)
+    return redirect(redirect_url)
+
+@login_required(login_url='login')
+def dashboard(request):
+    vendor = 1
+    customer = 2
+    if request.user.role == vendor:
+        template = 'accounts/vendor_dashboard.html'
+    elif request.user.role == customer:
+        template = 'accounts/customer_dashboard.html'
+    else:
+        return redirect('/admin')
+    return render(request, template)

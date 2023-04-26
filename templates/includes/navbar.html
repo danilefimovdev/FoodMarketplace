@@ -2,7 +2,6 @@
 
 
 <!-- Header Start -->
-
 <header id="header">
 	<div class="main-header">
 		<div class="container">
@@ -68,14 +67,23 @@
 						</ul>
 					</div>
 				</div>
-				<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-					<div class="login-option">
-						<a class="cs-color cs-popup-joinus-btn login-popup ml-0" data-toggle="modal" href="#"> Login </a>
-						<a class="cs-color cs-popup-joinus-btn login-popup ml-0"> \ </a>
-						<span><a class="cs-color cs-popup-joinus-btn login-popup ml-0" href="{% url 'register-user' %}" >Register</a></span>
-						<span><a class="get-start-btn" href="{% url 'register-vendor' %}"> Register Restaurant </a></span>
+				{% if user.is_authenticated %}
+					<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+						<div class="login-option">
+							( <a>{{user.username}}</a> )
+							<a class="cs-color cs-popup-joinus-btn login-popup ml-1 text-danger" href="{% url 'logout' %}">Logout</a>
+							<a class="cs-color cs-popup-joinus-btn login-popup" href="{% url 'dashboard' %}">My account</a>
+						</div>
 					</div>
-				</div>
+				{% else %}
+					<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+						<div class="login-option">
+							<a class="cs-color cs-popup-joinus-btn login-popup ml-0" href="{% url 'login' %}">Login</a> /
+								<span><a class="cs-color cs-popup-joinus-btn login-popup ml-0" href="{% url 'register-user' %}" >Register</a></span>
+								<span><a class="get-start-btn" href="{% url 'register-vendor' %}"> Register Restaurant </a></span>
+						</div>
+					</div>
+				{% endif %}
 			</div>
 		</div>
 	</div>
