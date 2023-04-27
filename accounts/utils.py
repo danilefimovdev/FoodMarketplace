@@ -29,3 +29,10 @@ def send_email(request, user, email_template, message_subject):
     mail = EmailMessage(message_subject, message, to=[to_email], from_email=from_email)
     mail.send()
 
+
+def send_notification(message_subject, email_template, context):
+    from_email = settings.DEFAULT_FROM_EMAIL
+    message = render_to_string(email_template, context)
+    to_email = context['user'].email
+    mail = EmailMessage(message_subject, message, to=[to_email], from_email=from_email)
+    mail.send()

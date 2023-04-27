@@ -7,9 +7,10 @@ from accounts.models import UserProfile, User
 from django.contrib import messages, auth
 from accounts.utils import detect_user, send_email
 from vendors.forms import VendorForm
+from vendors.models import Vendor
 
 
-    # TODO add next functionality (RegisterVendor html):
+# TODO add next functionality (RegisterVendor html):
     #   if user is autorized, then display only Register
     #   and in registrarion page do not display 'login, if you have an account' ability
     #   if user is already autorized.
@@ -129,11 +130,22 @@ def my_account(request):
 def dashboard(request):
     vendor = 1
     customer = 2
+    user = request.user
+    if request.user.role is None:  # it is admin
+        return redirect('/admin')
     if request.user.role == vendor:
+        vendor = Vendor.objects.get(user=user)
+        context = {
+            'vendor': vendor,
+        }
         template = 'accounts/vendor_dashboard.html'
-    else:                                             # role == customer
+    else:  # request.user.role == customer:
+        customer = Vendor.objects.get(user=user)
+        context = {
+            'customer': customer,
+        }
         template = 'accounts/customer_dashboard.html'
-    return render(request, template)
+    return render(request, template, context=context)
 
 
 def activate(request, uidb64, token):
