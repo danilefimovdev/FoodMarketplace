@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('country', models.CharField(blank=True, max_length=15, null=True)),
                 ('state', models.CharField(blank=True, max_length=15, null=True)),
                 ('city', models.CharField(blank=True, max_length=15, null=True)),
-                ('pin_code', models.CharField(blank=True, max_length=6, null=True)),
+                ('pin_code', models.CharField(blank=True, max_length=20, null=True)),
                 ('latitude', models.CharField(blank=True, max_length=20, null=True)),
                 ('longitude', models.CharField(blank=True, max_length=20, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
