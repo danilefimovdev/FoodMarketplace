@@ -4,9 +4,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
-from menu.models import Category
+from menu.models import Category, FoodItem
 from vendors.forms import VendorForm
 from vendors.models import Vendor
+from vendors.utils import get_vendor
 
 
 @login_required
@@ -37,6 +38,17 @@ def v_profile(request):
 
 
 def menu_builder(request):
-    vendor = Vendor.objects.get(user=request.user)
+    vendor = get_vendor(request)
     categories = Category.objects.filter(vendor=vendor)
     return render(request, 'vendors/menu_builder.html', context={'categories': categories})
+
+
+def fooditems_by_category(request, pk=None):
+    vendor = get_vendor(request)
+    category = get_object_or_404(Category, pk=pk)
+    food_items = FoodItem.objects.filter(vendor=vendor, category=category)
+    context = {
+        'food_items': food_items,
+        'category': category
+    }
+    return render(request, 'vendors/fooditems_by_category.html', context)
