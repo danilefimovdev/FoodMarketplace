@@ -14,10 +14,10 @@ class UserManager(BaseUserManager):
             raise ValueError('User must have an username')
 
         user = self.model(
-            email = self.normalize_email(email),
-            username = username,
-            first_name = first_name,
-            last_name = last_name,
+            email=self.normalize_email(email),
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -77,15 +77,6 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
-
-    def get_role(self):
-        if self.role == 1:
-            user_role = 'Vendor'
-        elif self.role == 2:
-            user_role = 'Customer'
-        else:
-            user_role = None
-        return user_role
 
 
 class UserProfile(models.Model):

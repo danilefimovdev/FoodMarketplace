@@ -7,8 +7,8 @@
             <li class="{% if 'profile' in request.path %}active{% endif %}">
                 <a href="{% url 'v-profile' %}"><i class="icon-building"></i>My Restaurant</a>
             </li>
-            <li>
-                <a href="restaurant-menu-builder.html"><i class="icon-menu5"></i>Menu Builder</a>
+            <li class="{% if 'menu-builder' in request.path %}active{% endif %}">
+                <a href="{% url 'menu-builder' %}"><i class="icon-menu5"></i>Menu Builder</a>
             </li>
             <li>
                 <a href="restaurant-orders.html"><i class="icon-add_shopping_cart"></i>Orders</a>
