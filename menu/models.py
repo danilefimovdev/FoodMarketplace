@@ -11,7 +11,7 @@ class Category(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     category_name = models.CharField(max_length=50, unique=True)
     slug = models.CharField(max_length=100, unique=True)
-    description = models.CharField(max_length=250, blank=True)
+    description = models.TextField(max_length=250, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
