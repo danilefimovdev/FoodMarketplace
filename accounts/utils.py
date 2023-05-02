@@ -36,3 +36,17 @@ def send_notification(message_subject, email_template, context):
     to_email = context['user'].email
     mail = EmailMessage(message_subject, message, to=[to_email], from_email=from_email)
     mail.send()
+
+
+def check_role_vendor(user):
+    if user.role == 1:
+        return True
+    else:
+        raise PermissionError
+
+
+def check_role_customer(user):
+    if user.role == 2:
+        return True
+    else:
+        raise PermissionError

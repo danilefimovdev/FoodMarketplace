@@ -11,9 +11,9 @@ from vendors.models import Vendor
 
 
 # TODO add next functionality (RegisterVendor html):
-    #   if user is autorized, then display only Register
-    #   and in registrarion page do not display 'login, if you have an account' ability
-    #   if user is already autorized.
+#   if user is autorized, then display only Register
+#   and in registration page do not display 'login, if you have an account' ability
+#   if user is already autorized.
 
 def registerUser(request):
     if request.user.is_authenticated:
