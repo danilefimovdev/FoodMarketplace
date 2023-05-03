@@ -1,0 +1,15 @@
+from django.urls import path
+
+from marketplace import views
+
+urlpatterns = [
+    path('', views.marketplace, name='marketplace'),
+    path('<slug:vendor_slug>/', views.vendor_detail, name='vendor-detail'),
+
+
+    # Cart
+    path('add_to_cart/<int:food_id>/', views.add_to_cart, name='add-to-cart'),
+    path('decrease_cart/<int:food_id>/', views.decrease_cart, name='decrease-cart'),
+]
+
+

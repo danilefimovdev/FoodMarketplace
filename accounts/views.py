@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import render, redirect
+from django.template.defaultfilters import slugify
 from django.utils.http import urlsafe_base64_decode
 from accounts.forms import UserForm
 from accounts.models import UserProfile, User
@@ -78,6 +79,8 @@ def registerVendor(request):
             vendor.user = user
             user_profile = UserProfile.objects.get(user=user)
             vendor.user_profile = user_profile
+            vendor_name = v_form.cleaned_data['vendor_name']
+            vendor.vendor_slug = slugify(vendor_name)
             vendor.save()
 
             messages.success(request, 'You have registered successfully. Please wait for the approval')

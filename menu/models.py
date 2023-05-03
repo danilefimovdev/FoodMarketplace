@@ -35,7 +35,7 @@ class Category(models.Model):
 # TODO Add weight field;
 class FoodItem(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='fooditems')
     food_title = models.CharField(max_length=50, unique=True)
     slug = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=250, blank=True)

@@ -28,9 +28,13 @@
 	<script src="{% static 'js/modernizr.js' %}"></script>
 	<script src="{% static 'js/bootstrap.js' %}"></script>
 
-	 <script async defer
-  		src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_API_KEY}}&libraries=places&callback=initAutoComplete">
-	 </script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+	{% if "/profile/" in  request.GET %}
+		<script async defer
+				src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_API_KEY}}&libraries=places&callback=initAutoComplete">
+		</script>
+	{% endif %}
 
 	<script src="{% static 'js/custom.js' %}"></script>
 

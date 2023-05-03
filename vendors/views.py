@@ -145,14 +145,14 @@ def edit_food(request, pk=None):
         if form.is_valid():
             food_title = form.cleaned_data['food_title']
             food_item = form.save(commit=False)
-            food_item.slug = slugify(food_title)
             food_item.vendor = get_vendor(request)
+            food_item.slug = slugify(food_title)
             food_item.save()
             messages.success(request, f'Food Item "{food_title}" was updated.')
             return redirect('fooditems-by-category', food_item.category.id)
         else:
             messages.error(request, 'You entered invalid data in form')
-            return redirect('edit-food', food_item.category.id)
+            return redirect('edit-food', food_item.id)
     else:
         form = FoodItemForm(instance=food_item)
         form.fields['category'].queryset = Category.objects.filter(vendor=get_vendor(request))
