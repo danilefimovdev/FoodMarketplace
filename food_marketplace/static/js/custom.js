@@ -85,6 +85,13 @@ $(document).ready(function(){
                 }else{
                     $('#cart_counter').html(response.cart_counter['cart_count']);
                     $('#qty-'+food_id).html(response.qty);
+
+                    // subtotal, tax, grand total
+                    applyCartAmounts(
+                        response.cart_amounts['subtotal'],
+                        response.cart_amounts['taxes'],
+                        response.cart_amounts['grand_total'],
+                    );
                 }
             }
         })
@@ -96,6 +103,7 @@ $(document).ready(function(){
 
         food_id = $(this).attr('data-id');
         url = $(this).attr('data-url');
+        cart_id= $(this).attr('id');
 
         $.ajax({
             type: 'GET',
@@ -111,10 +119,71 @@ $(document).ready(function(){
                 }else{
                     $('#cart_counter').html(response.cart_counter['cart_count']);
                     $('#qty-'+food_id).html(response.qty);
+
+                    applyCartAmounts(
+                        response.cart_amounts['subtotal'],
+                        response.cart_amounts['taxes'],
+                        response.cart_amounts['grand_total'],
+                    );
+
+                    if(window.location.path == '/cart/'){
+                        removeCartItem(response.qty, cart_id);
+                        checkCartEmpty();
+                    }
                 }
             }
         })
     })
+
+    // delete cart
+    $('.delete_cart').on('click', function(e){
+        e.preventDefault();
+
+        cart_id = $(this).attr('data-id');
+        url = $(this).attr('data-url');
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function(response){
+                console.log(response)
+                if(response.status == 'login_required'){
+                    Swal.fire(response.message, '', 'info').then(function(){
+                        window.location = '/login';
+                    })
+                }else if(response.status == 'Failed'){
+                    Swal.fire(response.message, '', 'error')
+                }else{
+                    $('#cart_counter').html(response.cart_counter['cart_count']);
+                    removeCartItem(0, cart_id);
+                    checkCartEmpty();
+
+                    applyCartAmounts(
+                        response.cart_amounts['subtotal'],
+                        response.cart_amounts['taxes'],
+                        response.cart_amounts['grand_total'],
+                    );
+                }
+            }
+        })
+    })
+
+    // check if the cart if empty
+    function checkCartEmpty(){
+        var cart_counter = document.getElementById('cart_counter').innerHTML
+        if(cart_counter == 0){
+            // remove cart item element
+            document.getElementById("empty-cart").style.display = "block"
+        }
+    }
+
+    // delete cart element if qty is 0
+    function removeCartItem(cartItemQty, cart_id){
+        if(cartItemQty <= 0){
+            // remove cart item element
+            document.getElementById("cart-item-"+cart_id).remove()
+        }
+    }
 
     // place the cart item quantity on load
     $('.item_qty').each(function(){
@@ -122,4 +191,13 @@ $(document).ready(function(){
         var qty = $(this).attr('data-qty')
         $('#'+the_id).html(qty)
     })
-})
+
+    // apply cart amount
+    function applyCartAmounts(subtotal, taxes, grand_total){
+        if(window.location.pathname == '/cart/'){
+            $('#subtotal').html(subtotal)
+            $('#taxes').html(taxes)
+            $('#total').html(grand_total)
+        }
+    }
+});
