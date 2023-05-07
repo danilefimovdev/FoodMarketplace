@@ -28,9 +28,9 @@
 												<div class="img-holder">
 													<figure>
 														{% if vendor.user_profile.profile_picture %}
-															<a href="#"><img src="{{ vendor.user_profile.profile_picture.url }}" class="img-list wp-post-image" alt=""></a>
+															<a href=""><img src="{{ vendor.user_profile.profile_picture.url }}" class="img-list wp-post-image" alt=""></a>
 														{% else %}
-															<a href="#"><img src="{% static 'images/default-profile.png' %}" class="img-list wp-post-image" alt=""></a>
+															<a href=""><img src="{% static 'images/default-profile.png' %}" class="img-list wp-post-image" alt=""></a>
 														{% endif %}
 													</figure>
 													<span class="restaurant-status close"><em class="bookmarkRibbon"></em>Close</span>
@@ -38,11 +38,19 @@
 												<div class="text-holder">
 													<div class="post-title">
 														<h5>
-															<a href="listing-detail.html">{{ vendor }}</a>
+															<a href="">{{ vendor }}</a>
 														</h5>
 													</div>
 													{% if vendor.user_profile.address %}
-														<span><small class="text-muted">{{vendor.user_profile.address}}</small></span>
+														<span>
+															<small class="text-muted">{{vendor.user_profile.address}}</small>
+														</span>
+													{% endif %}
+													{% if customer_location %}
+													<br>
+														<span>
+															<small><b>{{ vendor.kms }} km</b> away from {{customer_location}}</small>
+														</span>
 													{% endif %}
 												</div>
 												<div class="list-option">

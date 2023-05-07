@@ -1,7 +1,10 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.measure import D
+from django.db.models import Prefetch, Q
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from marketplace.context_processors import get_cart_counter, get_cart_amounts
 from marketplace.models import Cart
@@ -130,3 +133,32 @@ def delete_cart(request, cart_id):
             return JsonResponse({'status': 'Failed', 'message': 'Invalid request'})
     else:
         return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
+
+
+def search(request):
+    if "address" not in request.GET:
+        return redirect('marketplace')
+    address = request.GET['address']
+    latitude = request.GET['lat']
+    longitude = request.GET['long']
+    radius = request.GET['radius']
+    keyword = request.GET['keyword']
+
+    fetch_vendors_by_fooditems = FoodItem.objects.filter(food_title__icontains=keyword, is_available=True)\
+        .values_list('vendor', flat=True)
+    vendors = Vendor.objects.filter(Q(id__in=fetch_vendors_by_fooditems) |
+                                    Q(vendor_name__icontains=keyword, is_approved=True, user__is_active=True))
+
+    if latitude and longitude and radius:
+        pnt = GEOSGeometry("POINT(%s %s)" % (longitude, latitude))
+        vendors = Vendor.objects.filter(Q(id__in=fetch_vendors_by_fooditems) |
+                                        Q(vendor_name__icontains=keyword, is_approved=True, user__is_active=True),
+                                        user_profile__location__distance_lte=(pnt, D(km=radius))
+                                        ).annotate(distance=Distance("user_profile__location", pnt)).order_by("distance")
+        for vendor in vendors:
+            vendor.kms = round(vendor.distance.km, 1)
+
+    vendor_count = vendors.count()
+    return render(request, 'marketplace/listings.html', context={'vendors': vendors,
+                                                                 'vendor_count': vendor_count,
+                                                                 'customer_location': address})
