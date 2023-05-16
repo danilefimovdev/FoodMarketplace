@@ -31,7 +31,9 @@
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 	{% if '/' == request.path or 'profile' in request.path %}
-	<script src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_API_KEY}}&libraries=places&callback=initAutoComplete" defer></script>
+		<script async
+			src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_API_KEY}}&libraries=places&callback=initAutoComplete">
+		</script>
 	{% endif %}
 
 	<script src="{% static 'js/custom.js' %}"></script>

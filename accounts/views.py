@@ -124,10 +124,12 @@ def login(request):
     else:
         return render(request, 'accounts/login.html')
 
+
 @login_required(login_url='login')
 def my_account(request):
     redirect_url = detect_user(request.user)
     return redirect(redirect_url)
+
 
 @login_required(login_url='login')
 def dashboard(request):
@@ -142,10 +144,10 @@ def dashboard(request):
             'vendor': vendor,
         }
         template = 'accounts/vendor_dashboard.html'
-    else:  # request.user.role == customer:
-        customer = Vendor.objects.get(user=user)
+    else:  # request.user.role == customers:
+        customer = UserProfile.objects.get(user=user)
         context = {
-            'customer': customer,
+            'customers': customer,
         }
         template = 'accounts/customer_dashboard.html'
     return render(request, template, context=context)

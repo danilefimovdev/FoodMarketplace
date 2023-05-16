@@ -20,6 +20,7 @@ class UserForm(forms.ModelForm):
             raise forms.ValidationError("Two passwords don't match")
         # may be it should return it
 
+
 class UserProfileForm(forms.ModelForm):
 
     profile_picture = forms.FileField(widget=forms.FileInput({'class': 'btn btn-info'}),
@@ -43,4 +44,9 @@ class UserProfileForm(forms.ModelForm):
                 if field == 'latitude' or field == 'longitude':
                     self.fields[field].widget.attrs['readonly'] = 'readonly'
 
+
+class UserInfoForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'phone_number']
 
