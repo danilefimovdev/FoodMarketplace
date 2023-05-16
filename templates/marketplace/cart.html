@@ -34,7 +34,7 @@
 																		<a href="{% url 'vendor-detail' item.fooditem.vendor.vendor_slug%}" class="badge badge-warning">{{item.fooditem.vendor.vendor_name}}</a>
 																	</div>
 																	<div class="price-holder">
-																		<span class="price">UZS {{item.fooditem.price}}</span>
+																		<span class="price">$ {{item.fooditem.price}}</span>
 																		<a href="" class="add_to_cart" data-id="{{ item.fooditem.id }}" data-url="{% url 'add-to-cart' item.fooditem.id %}"
 																		   style="margin-right: 28px"><i class="icon-plus4 text-color"></i></a>
 
@@ -84,13 +84,19 @@
                                                                 <span id="subtotal">{{subtotal}}</span>
                                                             </span>
                                                         </li>
-                                                        <li style="list-style-type: none;">
-                                                            Taxes
-                                                            <span class="price float-right">
-                                                                <span class="currency">$</span>
-                                                                <span id="taxes">{{taxes}}</span>
-                                                            </span>
-                                                        </li>
+                                                        Taxes:
+														{% for tax_type, tax_data in tax_dict.items %}
+															{% for tax_perc, tax_amount in tax_data.items %}
+																<li style="list-style-type: none;">
+																	{{tax_type}}
+																	<span class="price float-right">
+																		<span id="taxes">{{tax_perc}}%:</span>
+																		<span class="currency"> ${{tax_amount}}</span>
+																	</span>
+																</li>
+															{% endfor %}
+														{% endfor %}
+														<hr>
                                                         <li style="list-style-type: none; font-weight: 600">
                                                             Total
                                                             <span class="price float-right">

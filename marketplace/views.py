@@ -25,6 +25,7 @@ def marketplace(request):
 
 
 def vendor_detail(request, vendor_slug):
+    context = dict()
     vendor = Vendor.objects.get(vendor_slug=vendor_slug)
     categories = Category.objects.filter(vendor=vendor).prefetch_related(
         Prefetch(
@@ -34,18 +35,23 @@ def vendor_detail(request, vendor_slug):
     )
     now = datetime.now()
     opening_hours = OpeningHour.objects.filter(vendor=get_vendor(request)).order_by('day')
-    today = OpeningHour.objects.get(vendor=get_vendor(request), day=datetime.isoweekday(now))
+    try:
+        today = OpeningHour.objects.get(vendor=get_vendor(request), day=datetime.isoweekday(now))
+        context.update({'today': today})
+    except Exception:
+        pass
     if request.user.is_authenticated:
         cart_items = Cart.objects.filter(user=request.user)
     else:
         cart_items = None
-    context = {
-        'vendor': vendor,
-        'categories': categories,
-        'cart_items': cart_items,
-        'opening_hours': opening_hours,
-        'today': today,
-    }
+    context.update(
+        {
+            'vendor': vendor,
+            'categories': categories,
+            'cart_items': cart_items,
+            'opening_hours': opening_hours,
+        }
+    )
     return render(request, 'marketplace/vendor_detail.html', context)
 
 

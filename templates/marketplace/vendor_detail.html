@@ -43,7 +43,7 @@
 												<li>
 													<a href="#" class="reviews-sortby-active">
 														<span>Today :</span>
-														{% if today.is_closed %}
+														{% if not today or today.is_closed %}
 															Closed
 														{% else %}
 															{{ today.from_hour }} - {{ today.to_hour }}
@@ -116,7 +116,7 @@
 																		<span>{{food.description}}</span>
 																	</div>
 																	<div class="price-holder">
-																		<span class="price">UZS {{food.price}}</span>
+																		<span class="price">$ {{food.price}}</span>
 																		<a href="" class="add_to_cart" data-id="{{ food.id }}" data-url="{% url 'add-to-cart' food.id %}"
 																		   style="margin-right: 28px"><i class="icon-plus4 text-color"></i></a>
 																		<label id="qty-{{food.id}}">0</label>
