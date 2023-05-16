@@ -25,10 +25,13 @@ class Vendor(models.Model):
         current_opening_hours = OpeningHour.objects.get(vendor=self, day=today)
 
         current_time = now.strftime("%H:%M:%S")
-        start = str(datetime.strptime(current_opening_hours.from_hour, "%I:%M %p").time())
-        end = str(datetime.strptime(current_opening_hours.to_hour, "%I:%M %p").time())
-        if end > current_time > start:
-            is_open = True
+        if not current_opening_hours.is_closed:
+            start = str(datetime.strptime(current_opening_hours.from_hour, "%I:%M %p").time())
+            end = str(datetime.strptime(current_opening_hours.to_hour, "%I:%M %p").time())
+            if end > current_time > start:
+                is_open = True
+            else:
+                is_open = False
         else:
             is_open = False
         return is_open
@@ -52,8 +55,6 @@ class Vendor(models.Model):
 
                 send_notification(message_subject, email_template, context)
         return super(Vendor, self).save()
-
-
 
 
 DAYS = [
