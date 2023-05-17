@@ -18,7 +18,7 @@
 											<div class="menu-itam-holder">
 												<div id="menu-item-list-6272" class="menu-itam-list">
 
-													<form action="#" method="POST">
+													<form action="{% url 'place-order'%}" method="POST">
 														{% csrf_token %}
 
 														<div class="row">
@@ -96,7 +96,7 @@
 																		<a href="{% url 'vendor-detail' item.fooditem.vendor.vendor_slug%}" class="badge badge-warning">{{item.fooditem.vendor}}</a>
 																	</div>
 
-																	<div class="quantity-holder" style="display: inline-block; position: absolute; top: 50%; transform: translateY(-50%); margin-top: -10px; margin-left: -10px;">
+																	<div class="quantity-holder" style="display: inline-block; position: absolute; top: 50%; transform: translateY(-50%); margin-top: -10px; margin-left: -20px;">
 																		<span>{{item.quantity}} pieces</span>
 																	</div>
 																	<div class="price-holder">
@@ -112,7 +112,7 @@
 												</div>
                                                 <div>
                                                     <ul>
-                                                        <li style="list-style-type: none;">
+                                                        <li style="list-style-type: none; margin-top: -40px;">
                                                             Subtotal
                                                             <span class="price float-right">
                                                                 <span class="currency">$</span>
@@ -140,8 +140,19 @@
                                                                 <span id="total">{{grand_total}}</span>
                                                             </span>
                                                         </li>
-
-														<button type="submit" class="btn btn-danger p-2 w-100 mt-3">PLACE ORDER</button>
+														<hr>
+														<h5>SELECT PAYMENT METHOD</h5>
+														<div class="payment-method">
+															<label style="padding: 10px">
+																<input type="radio" name="payment_method" value="PayPal">
+																<img src="{% static 'images/PayPal.png' %}" alt="PayPal" width="100">
+															</label>
+															<label style="padding: 10px">
+																<input type="radio" name="payment_method" value="Cash">
+																<img src="{% static 'images/Cash.png' %}" alt="Cash" height="50">
+															</label>
+														</div>
+														<button onclick="return payMethodConfirm();" type="submit" class="btn btn-danger p-2 w-100 mt-3">PLACE ORDER</button>
 
                                                     </ul>
 													</form>
@@ -158,5 +169,19 @@
 				</div>
 			</div>
 			<!-- Main Section End -->
+	<script>
+		function payMethodConfirm(){
+			var payMethod = $("input[name='payment_method']:checked").val()
+			if(!payMethod){
+				Swal.fire({
+					title: 'Choose Payment Method',
+					confirmButtonColor: "#E72222",
+				})
+				return false;
+			}else{
+				return true;
+			}
+		}
+	</script>
 
 {% endblock %}
