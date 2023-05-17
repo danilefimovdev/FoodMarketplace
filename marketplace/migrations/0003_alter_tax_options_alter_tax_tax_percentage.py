@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='tax',
             name='tax_percentage',
-            field=models.DecimalField(decimal_places=2, max_digits=2, verbose_name='Tax percentage(%)'),
+            field=models.DecimalField(decimal_places=2, max_digits=5, verbose_name='Tax percentage(%)'),
         ),
     ]

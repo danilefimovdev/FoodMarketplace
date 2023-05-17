@@ -7,9 +7,12 @@ from django.contrib.gis.measure import D
 from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+
+from accounts.models import UserProfile
 from marketplace.context_processors import get_cart_counter, get_cart_amounts
 from marketplace.models import Cart
 from menu.models import Category, FoodItem
+from orders.forms import OrderForm
 from vendors.models import Vendor, OpeningHour, DAYS
 from vendors.utils import get_vendor
 
@@ -25,7 +28,6 @@ def marketplace(request):
 
 
 def vendor_detail(request, vendor_slug):
-    context = dict()
     vendor = Vendor.objects.get(vendor_slug=vendor_slug)
     categories = Category.objects.filter(vendor=vendor).prefetch_related(
         Prefetch(
@@ -34,9 +36,10 @@ def vendor_detail(request, vendor_slug):
         )
     )
     now = datetime.now()
-    opening_hours = OpeningHour.objects.filter(vendor=get_vendor(request)).order_by('day')
+    opening_hours = OpeningHour.objects.filter(vendor=vendor).order_by('day')
+    context = dict()
     try:
-        today = OpeningHour.objects.get(vendor=get_vendor(request), day=datetime.isoweekday(now))
+        today = OpeningHour.objects.get(vendor=vendor, day=datetime.isoweekday(now))
         context.update({'today': today})
     except Exception:
         pass
@@ -103,10 +106,10 @@ def decrease_cart(request, food_id):
                         chkCart.delete()
                         chkCart.quantity = 0
                     return JsonResponse({'status': 'Success',
-                                        'message': 'Decreased the cart quantity',
-                                        'cart_counter': get_cart_counter(request),
-                                        'qty': chkCart.quantity,
-                                        'cart_amounts': get_cart_amounts(request)})
+                                         'message': 'Decreased the cart quantity',
+                                         'cart_counter': get_cart_counter(request),
+                                         'qty': chkCart.quantity,
+                                         'cart_amounts': get_cart_amounts(request)})
                 except Exception:
                     return JsonResponse({'status': 'Failed', 'message': 'You do not have this item in your cart'})
             except Exception:
@@ -157,7 +160,7 @@ def search(request):
     radius = request.GET['radius']
     keyword = request.GET['keyword']
 
-    fetch_vendors_by_fooditems = FoodItem.objects.filter(food_title__icontains=keyword, is_available=True)\
+    fetch_vendors_by_fooditems = FoodItem.objects.filter(food_title__icontains=keyword, is_available=True) \
         .values_list('vendor', flat=True)
     vendors = Vendor.objects.filter(Q(id__in=fetch_vendors_by_fooditems) |
                                     Q(vendor_name__icontains=keyword, is_approved=True, user__is_active=True))
@@ -167,7 +170,8 @@ def search(request):
         vendors = Vendor.objects.filter(Q(id__in=fetch_vendors_by_fooditems) |
                                         Q(vendor_name__icontains=keyword, is_approved=True, user__is_active=True),
                                         user_profile__location__distance_lte=(pnt, D(km=radius))
-                                        ).annotate(distance=Distance("user_profile__location", pnt)).order_by("distance")
+                                        ).annotate(distance=Distance("user_profile__location", pnt)).order_by(
+            "distance")
         for vendor in vendors:
             vendor.kms = round(vendor.distance.km, 1)
 
@@ -175,3 +179,29 @@ def search(request):
     return render(request, 'marketplace/listings.html', context={'vendors': vendors,
                                                                  'vendor_count': vendor_count,
                                                                  'customer_location': address})
+
+
+@login_required(login_url='login')
+def checkout(request):
+    cart_items = Cart.objects.filter(user=request.user).order_by('created_at')
+    cart_count = cart_items.count()
+    if cart_count <= 0:
+        return redirect('marketplace')
+    user_profile = UserProfile.objects.get(user=request.user)
+    default_values = {
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+        'phone': request.user.phone_number,
+        'email': request.user.email,
+        'address': user_profile.address,
+        'country': user_profile.country,
+        'state': user_profile.state,
+        'city': user_profile.city,
+        'pin_code': user_profile.pin_code,
+    }
+    form = OrderForm(initial=default_values)
+    context = {
+        'form': form,
+        'cart_items': cart_items,
+    }
+    return render(request, 'marketplace/checkout.html', context)
