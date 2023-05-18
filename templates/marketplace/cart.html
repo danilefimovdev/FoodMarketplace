@@ -27,7 +27,7 @@
 														<ul>
 															{% for item in cart_items %}
 																<li id="cart-item-{{item.id}}" >
-																	<div class="image-holder"><img src="{{ item.fooditem.image.url }}" alt=""></div>
+																	<div class="image-holder"><img style="border-radius: 10px;" src="{{ item.fooditem.image.url }}" alt=""></div>
 																	<div class="text-holder">
 																		<h6>{{item.fooditem.food_title}}</h6>
 																		<a href="{% url 'vendor-detail' item.fooditem.vendor.vendor_slug%}" class="badge badge-warning">{{item.fooditem.vendor.vendor_name}}</a>

@@ -21,9 +21,9 @@
 										<div class="img-holder">
 											<figure>
 												{% if vendor.user_profile.profile_picture %}
-													<img src="{{ vendor.user_profile.profile_picture.url }}" alt="">
+													<img style="border-radius: 10px;" src="{{ vendor.user_profile.profile_picture.url }}" alt="">
 												{% else %}
-													<img src="{% static 'images/default-profile.png' %}" alt="">
+													<img style="border-radius: 10px;" src="{% static 'images/default-profile.png' %}" alt="">
 												{% endif %}
 											</figure>
 										</div>
@@ -110,7 +110,7 @@
 														<ul>
 															{% for food in category.fooditems.all %}
 																<li>
-																	<div class="image-holder"><img src="{{ food.image.url }}" alt=""></div>
+																	<div class="image-holder"><img style="border-radius: 10px;" src="{{ food.image.url }}" alt=""></div>
 																	<div class="text-holder">
 																		<h6>{{food.food_title}}</h6>
 																		<span>{{food.description}}</span>

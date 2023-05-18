@@ -88,13 +88,13 @@
 							<div class="company-logo">
 								<ul>
 									{% for vendor in vendors %}
-										<li class="has-border">
+										<li>
 											<figure>
 												<a href="{% url 'vendor-detail' vendor.vendor_slug %}">
 													{% if vendor.user_profile.profile_picture %}
-														<img src="{{ vendor.user_profile.profile_picture.url }}" class="attachment-full size-full wp-post-image" alt="">
+														<img style="border-radius: 10px;" src="{{ vendor.user_profile.profile_picture.url }}" class="attachment-full size-full wp-post-image" alt="">
 													{% else %}
-														<img src="{% static 'images/default-profile.png' %}" class="attachment-full size-full wp-post-image" alt="">
+														<img style="border-radius: 10px;" src="{% static 'images/default-profile.png' %}" class="attachment-full size-full wp-post-image" alt="">
 													{% endif %}
 												</a>
 											</figure>
@@ -124,11 +124,11 @@
 										<li class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
 											<div class="list-post featured">
 												<div class="img-holder">
-													<figure>
+													<figure style="width: 70px; height: 50px;">
 														{% if vendor.user_profile.profile_picture %}
-															<img src="{{ vendor.user_profile.profile_picture.url }}" class="img-thumb wp-post-image" alt="">
+															<img style="border-radius: 10px; width: 70px; height: 70px;" src="{{ vendor.user_profile.profile_picture.url }}" class="img-thumb wp-post-image" alt="">
 														{% else %}
-															<img src="{% static 'images/default-profile.png' %}" class="img-thumb wp-post-image" alt="">
+															<img style="border-radius: 10px;" src="{% static 'images/default-profile.png' %}" class="img-thumb wp-post-image" alt="">
 														{% endif %}
 													</figure>
 													{% if vendor.is_open %}

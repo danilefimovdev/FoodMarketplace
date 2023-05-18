@@ -35,9 +35,9 @@
 																			<div class="drag-list">
 																				<div class="item-thumb">
 																					{% if vendor.user_profile.profile_picture %}
-																						<img src=" {{vendor.user_profile.profile_picture.url}}" alt="">
+																						<img style="border-radius: 10px;" src=" {{vendor.user_profile.profile_picture.url}}" alt="">
 																					{% else %}
-																						<img src="{% static 'images/default-profile.png' %}" alt="">
+																						<img style="border-radius: 10px;" src="{% static 'images/default-profile.png' %}" alt="">
 																					{% endif %}
 																				</div>
 																			</div>
@@ -85,7 +85,7 @@
 																		<li class="gal-img">
 																			<div class="drag-list">
 																				<div class="item-thumb">
-																					<img class="thumbnail" src="{{ vendor.vendor_license.url }}" alt="License">
+																					<img style="border-radius: 10px;" class="thumbnail" src="{{ vendor.vendor_license.url }}" alt="License">
 																				</div>
 																			</div>
 																		</li>

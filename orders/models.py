@@ -5,7 +5,7 @@ from menu.models import FoodItem
 
 class Payment(models.Model):
     PAYMENT_METHOD = (
-        ('Paypal', 'Paypal'),
+        ('PayPal', 'PayPal'),
         ('Cash', 'Cash'),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
