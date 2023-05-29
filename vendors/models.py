@@ -44,6 +44,7 @@ class Vendor(models.Model):
                 email_template = 'accounts/email/admin_approval_email.html'
                 context = {
                     'user': self.user,
+                    'to_email': [self.user.email],
                     'is_approved': self.is_approved
                 }
 

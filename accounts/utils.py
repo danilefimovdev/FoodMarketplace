@@ -1,14 +1,16 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
+from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
+from accounts.models import User
 from food_marketplace import settings
 
 
-def detect_user(user):
+def detect_user(user: User):
     if user.role == 1 or user.role == 2:
         redirect_url = 'dashboard'
     elif user.role is None and user.is_superadmin is True:  # case for superuser
@@ -16,7 +18,7 @@ def detect_user(user):
     return redirect_url
 
 
-def send_email(request, user, email_template, message_subject):
+def send_email(request: HttpRequest, user: User, email_template: str, message_subject: str):
     current_site = get_current_site(request)
     message = render_to_string(email_template, {
         'user': user,
@@ -30,15 +32,15 @@ def send_email(request, user, email_template, message_subject):
     mail.send()
 
 
-def send_notification(message_subject, email_template, context):
+def send_notification(message_subject: str, email_template: str, context: dict):
     from_email = settings.DEFAULT_FROM_EMAIL
     message = render_to_string(email_template, context)
-    to_email = context['user'].email
-    mail = EmailMessage(message_subject, message, to=[to_email], from_email=from_email)
+    to_email = context['to_email']
+    mail = EmailMessage(message_subject, message, to=to_email, from_email=from_email)
     mail.send()
 
 
-def check_role_vendor(user):
+def check_role_vendor(user: User):
     if user.role == 1:
         return True
     else:
