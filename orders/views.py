@@ -134,7 +134,6 @@ def order_complete(request):
             'total': total,
             'subtotal': subtotal,
             'taxes': taxes,
-
         }
         return render(request, 'orders/order_complete.html', context=context)
     except Exception:

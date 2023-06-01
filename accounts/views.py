@@ -7,12 +7,13 @@ from accounts.forms import UserForm
 from accounts.models import UserProfile, User
 from django.contrib import messages, auth
 from accounts.utils import detect_user, send_email
+from orders.models import Order
 from vendors.forms import VendorForm
 from vendors.models import Vendor
 
 
 # TODO add next functionality (RegisterVendor html):
-#   if user is autorized, then display only Register
+#   if user is authorized, then display only Register
 #   and in registration page do not display 'login, if you have an account' ability
 #   if user is already autorized.
 
@@ -49,9 +50,9 @@ def registerUser(request):
 
 
     # TODO add next functionality (RegisterVendor html):
-    #   while vendor registration if user is autorized,
+    #   while vendor registration if user is authorized,
     #   then do not display fields for user registration.
-    #   Get these information from autorized user.
+    #   Get these information from authorized user.
 def registerVendor(request):
     # TODO do refactor this part of code
     if request.user.is_authenticated:
@@ -146,8 +147,10 @@ def dashboard(request):
         template = 'accounts/vendor_dashboard.html'
     else:  # request.user.role == customers:
         customer = UserProfile.objects.get(user=user)
+        recent_orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('created_at')[:3]
         context = {
-            'customers': customer,
+            'customers': customer,  # find out is the customer and vendor required to be past in context
+            'recent_orders': recent_orders,
         }
         template = 'accounts/customer_dashboard.html'
     return render(request, template, context=context)

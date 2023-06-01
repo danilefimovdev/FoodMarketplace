@@ -4,12 +4,13 @@
             <li class="{% if 'dashboard' in request.path or '/customer/' == request.path %}active{% endif %}">
                 <a href="{% url 'dashboard' %}"><i class="icon-dashboard3"></i>Dashboard</a>
             </li>
-            <li><a href="restaurant-restaurant.html"><i class="icon-add_shopping_cart"></i>My orders</a></li>
+            <li class="{% if 'order' in request.path %}active{% endif %}">
+                <a href="{% url 'c-my-orders' %}"><i class="icon-add_shopping_cart"></i>My orders</a>
+            </li>
             <li class="{% if '/profile/' in request.path %}active{% endif %}">
                 <a href="{% url 'c-profile' %}"><i class="icon-build"></i>Profile settings</a>
             </li>
-            <li><a href="restaurant-change-password.html"><i class="icon-unlock-alt"></i>Change Password</a></li>
-            <li><a class="logout-btn" href="registration.html"><i class="icon-log-out"></i>Signout</a></li>
+            <li><a href="{% url 'reset-password' %}"><i class="icon-unlock-alt"></i>Change Password</a></li>
         </ul>
     </div>
 </div>
