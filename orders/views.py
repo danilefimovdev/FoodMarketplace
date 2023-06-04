@@ -5,7 +5,8 @@ from django.shortcuts import render, redirect
 
 from accounts.utils import send_notification
 from marketplace.context_processors import get_cart_amounts
-from marketplace.models import Cart
+from marketplace.models import Cart, Tax
+from menu.models import FoodItem
 from orders.forms import OrderForm
 from orders.models import Order, Payment, OrderedFood
 from orders.utils import generate_order_number
@@ -17,10 +18,42 @@ def place_order(request):
     cart_count = cart_items.count()
     if cart_count <= 0:
         return redirect('marketplace')
+
+    vendors_ids = []
+    for item in cart_items:
+        id_ = item.fooditem.vendor.id
+        if id_ not in vendors_ids:
+            vendors_ids.append(id_)
+
+    # {"vendor_id":{"subtotal":{"tax_type": {"tax_percentage": "tax_amount"}}}}
+
+    get_taxes = Tax.objects.filter(is_active=True)
+    total_data = {}
+    subtotal_by_vendor = {}
+
+    for item in cart_items:
+        fooditem = FoodItem.objects.get(pk=item.fooditem.pk)
+        v_id = fooditem.vendor.id
+        item_amount = (fooditem.price * item.quantity)
+        if v_id in subtotal_by_vendor:
+            subtotal = subtotal_by_vendor[v_id]
+            subtotal += item_amount
+            subtotal_by_vendor[v_id] = subtotal
+        else:
+            subtotal_by_vendor[v_id] = item_amount
+
+        tax_dict = {}
+        for tax in get_taxes:
+            tax_type = tax.tax_type
+            percentage = tax.tax_percentage
+            tax_amount = round(subtotal_by_vendor[v_id] * percentage / 100, 2)
+            tax_dict.update({tax_type: {float(percentage): float(tax_amount)}})
+        total_data.update({v_id: {float(subtotal_by_vendor[v_id]): tax_dict}})
+        print(total_data)
+
     total_tax = get_cart_amounts(request)['taxes']
     grand_total = get_cart_amounts(request)['grand_total']
     tax_data = get_cart_amounts(request)['tax_dict']
-
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
@@ -38,8 +71,11 @@ def place_order(request):
             order.total_tax = total_tax
             order.total = grand_total
             order.tax_data = json.dumps(tax_data)
+            order.total_data = total_data
             order.payment_method = request.POST['payment_method']
+            order.save()
             order.order_number = generate_order_number(request.user.pk)
+            order.vendor.add(*vendors_ids)
             order.save()
             context = {
                 'order': order,

@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import IntegrityError
@@ -8,8 +10,10 @@ from django.template.defaultfilters import slugify
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
 from accounts.utils import check_role_vendor
+from marketplace.models import Tax
 from menu.forms import CategoryForm, FoodItemForm
 from menu.models import Category, FoodItem
+from orders.models import Order, OrderedFood
 from vendors.forms import VendorForm, OpeningHourForm
 from vendors.models import Vendor, OpeningHour
 from vendors.utils import get_vendor
@@ -239,3 +243,23 @@ def remove_opening_hours(request, pk=None):
             return JsonResponse({'status': 'failed', 'message': 'Invalid request'})
     else:
         return JsonResponse({'status': 'failed', 'message': 'You are not logged in'})
+
+
+def order_detail(request, order_number):
+    order = get_object_or_404(Order, order_number=order_number, is_ordered=True)
+    ordered_food = OrderedFood.objects.filter(order=order, fooditem__vendor__in=[get_vendor(request)])
+
+    context = {
+        'order': order,
+        'ordered_food': ordered_food,
+        'subtotal': order.get_data_by_vendor()['subtotal'],
+        'taxes': order.get_data_by_vendor()['tax_dict'],
+        'total': order.get_data_by_vendor()['total']
+    }
+    return render(request, 'vendors/order_detail.html', context)
+
+
+@login_required()
+def my_orders(request):
+    orders = Order.objects.filter(vendor=get_vendor(request), is_ordered=True).order_by('created_at')[::-1]
+    return render(request, 'vendors/orders.html', context={'orders': orders})

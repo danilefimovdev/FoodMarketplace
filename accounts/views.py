@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import render, redirect
@@ -6,7 +8,7 @@ from django.utils.http import urlsafe_base64_decode
 from accounts.forms import UserForm
 from accounts.models import UserProfile, User
 from django.contrib import messages, auth
-from accounts.utils import detect_user, send_email
+from accounts.utils import detect_user, send_email, get_total_of_orders
 from orders.models import Order
 from vendors.forms import VendorForm
 from vendors.models import Vendor
@@ -141,13 +143,25 @@ def dashboard(request):
         return redirect('/admin')
     if request.user.role == vendor:
         vendor = Vendor.objects.get(user=user)
+        orders = Order.objects.filter(vendor__in=[vendor.id], is_ordered=True).order_by('-created_at')
+        recent_orders = orders[:5]
+        total_revenue = get_total_of_orders(orders)
+        today = datetime.today()
+        current_month_orders = Order.objects.filter(vendor__in=[vendor.id],
+                                                    created_at__month=today.month,
+                                                    created_at__year=today.year)
+        month_revenue = get_total_of_orders(current_month_orders)
         context = {
-            'vendor': vendor,
+            'orders': orders,
+            'orders_count': orders.count(),
+            'recent_orders': recent_orders,
+            'total_revenue': total_revenue,
+            'month_revenue': month_revenue,
         }
         template = 'accounts/vendor_dashboard.html'
     else:  # request.user.role == customers:
         customer = UserProfile.objects.get(user=user)
-        recent_orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('created_at')[:3]
+        recent_orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')[:5]
         context = {
             'customers': customer,  # find out is the customer and vendor required to be past in context
             'recent_orders': recent_orders,

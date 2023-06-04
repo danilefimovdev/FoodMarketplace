@@ -6,5 +6,5 @@ urlpatterns = [
     path('', account_views.dashboard, name='customer'),
     path('profile/', views.c_profile, name='c-profile'),
     path('my_orders/', views.my_orders, name='c-my-orders'),
-    path('order_details/<int:order_number>/', views.order_details, name='c-order-details'),
+    path('order-details/<int:order_number>/', views.order_details, name='c-order-details'),
     ]

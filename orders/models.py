@@ -1,6 +1,11 @@
+import json
+
 from django.db import models
 from accounts.models import User
 from menu.models import FoodItem
+from vendors.models import Vendor
+
+request_object = None
 
 
 class Payment(models.Model):
@@ -28,6 +33,7 @@ class Order(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True)
+    vendor = models.ManyToManyField(Vendor, blank=True)
     order_number = models.CharField(max_length=28)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -39,6 +45,7 @@ class Order(models.Model):
     city = models.CharField(max_length=50)
     pin_code = models.CharField(max_length=10)
     total = models.FloatField(max_length=10)
+    total_data = models.JSONField(blank=True, null=True)
     tax_data = models.JSONField(blank=True, help_text="Data format: {'tax_ty}")
     total_tax = models.FloatField()
     payment_method = models.CharField(max_length=25)
@@ -50,6 +57,32 @@ class Order(models.Model):
     @property
     def name(self):
         return f'{self.first_name} {self.last_name}'
+
+    def order_placed_to(self):
+        return ', '.join([str(i) for i in self.vendor.all()])
+
+    def get_data_by_vendor(self) -> dict:
+        vendor = Vendor.objects.get(user=request_object.user)
+        if self.total_data:
+            total_data = self.total_data
+            data = total_data.get(str(vendor.id))
+            subtotal = 0
+            taxes_amount = 0
+            tax_dict = {}
+            for subtotal_, tax_data in data.items():
+                subtotal += float(subtotal_)
+                tax_dict.update(tax_data)
+                for tax in tax_data.values():
+                    for tax_amount in tax.values():
+                        taxes_amount += float(tax_amount)
+            total = subtotal + taxes_amount
+            context = {
+                'subtotal': subtotal,
+                'tax_dict': tax_dict,
+                'total': round(total, 2),
+                'taxes_amount': taxes_amount,
+            }
+            return context
 
     def __str__(self):
         return self.order_number

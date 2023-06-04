@@ -1,6 +1,9 @@
+import datetime
+
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
+from django.db.models import QuerySet
 from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
@@ -52,3 +55,10 @@ def check_role_customer(user):
         return True
     else:
         raise PermissionError
+
+
+def get_total_of_orders(orders: QuerySet) -> float:
+    revenue = 0
+    for order in orders:
+        revenue += order.get_data_by_vendor()['total']
+    return round(revenue, 2)
