@@ -51,12 +51,7 @@ def registerUser(request):
     return render(request, 'accounts/registerUser.html', context)
 
 
-    # TODO add next functionality (RegisterVendor html):
-    #   while vendor registration if user is authorized,
-    #   then do not display fields for user registration.
-    #   Get these information from authorized user.
 def registerVendor(request):
-    # TODO do refactor this part of code
     if request.user.is_authenticated:
         messages.info(request, f'You are already logged in as "{request.user.username}"')
         return redirect('register-user')

@@ -32,6 +32,7 @@ def send_email(request: HttpRequest, user: User, email_template: str, message_su
     to_email = user.email
     from_email = settings.DEFAULT_FROM_EMAIL
     mail = EmailMessage(message_subject, message, to=[to_email], from_email=from_email)
+    mail.content_subtype = 'html'
     mail.send()
 
 
@@ -40,6 +41,7 @@ def send_notification(message_subject: str, email_template: str, context: dict):
     message = render_to_string(email_template, context)
     to_email = context['to_email']
     mail = EmailMessage(message_subject, message, to=to_email, from_email=from_email)
+    mail.content_subtype = 'html'
     mail.send()
 
 
