@@ -154,7 +154,7 @@ DEFAULT_FROM_EMAIL = 'foodOnline Marketplace'
 # Google api
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-gdal
+# gdal
 if DEBUG is True:
     os.environ['PATH'] = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo') + ';' + os.environ['PATH']
     os.environ['PROJ_LIB'] = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo/data/proj') + ';' + os.environ['PATH']
