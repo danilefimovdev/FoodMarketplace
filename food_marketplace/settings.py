@@ -155,10 +155,10 @@ DEFAULT_FROM_EMAIL = 'foodOnline Marketplace'
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # gdal
-if DEBUG is True:
-    os.environ['PATH'] = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo') + ';' + os.environ['PATH']
-    os.environ['PROJ_LIB'] = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo/data/proj') + ';' + os.environ['PATH']
-    GDAL_LIBRARY_PATH = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo/gdal304.dll')
+
+os.environ['PATH'] = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo') + ';' + os.environ['PATH']
+os.environ['PROJ_LIB'] = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo/data/proj') + ';' + os.environ['PATH']
+GDAL_LIBRARY_PATH = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo/gdal304.dll')
 
 # PayPal client id
 PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
