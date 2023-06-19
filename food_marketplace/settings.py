@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG")
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['172.105.53.146', 'foodonlinemarketplace.store', 'www.foodonlinemarketplace.store' '127.0.0.1:8000']
 
 
 # Application definition
