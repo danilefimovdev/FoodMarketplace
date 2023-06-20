@@ -18,15 +18,15 @@ class UserForm(forms.ModelForm):
         confirm_password = self.cleaned_data.get('confirm_password')
         if password != confirm_password:
             raise forms.ValidationError("Two passwords don't match")
-        # may be it should return it
+        return cleaned_data
 
 
 class UserProfileForm(forms.ModelForm):
 
     profile_picture = forms.FileField(widget=forms.FileInput({'class': 'btn btn-info'}),
-                                       validators=[allow_only_images_validator])
+                                      validators=[allow_only_images_validator])
     cover_photo = forms.FileField(widget=forms.FileInput({'class': 'btn btn-info'}),
-                                   validators=[allow_only_images_validator])
+                                  validators=[allow_only_images_validator])
     latitude = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     longitude = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     address = forms.CharField(widget=forms.TextInput(attrs={

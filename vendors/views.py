@@ -1,16 +1,12 @@
-import json
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import IntegrityError
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.defaultfilters import slugify
-
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
 from accounts.utils import check_role_vendor
-from marketplace.models import Tax
 from menu.forms import CategoryForm, FoodItemForm
 from menu.models import Category, FoodItem
 from orders.models import Order, OrderedFood
@@ -263,3 +259,4 @@ def order_detail(request, order_number):
 def my_orders(request):
     orders = Order.objects.filter(vendor=get_vendor(request), is_ordered=True).order_by('created_at')[::-1]
     return render(request, 'vendors/orders.html', context={'orders': orders})
+

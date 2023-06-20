@@ -1,8 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
 from django.contrib.gis.db import models as gismodels
 from django.contrib.gis.geos import Point
 
@@ -106,3 +103,6 @@ class UserProfile(models.Model):
         if self.longitude and self.latitude:
             self.location = Point(float(self.longitude), float(self.latitude))
         return super(UserProfile, self).save(*args, **kwargs)
+
+
+

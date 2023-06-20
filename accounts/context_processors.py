@@ -1,8 +1,5 @@
-from datetime import datetime
-
-from accounts.models import User
 from food_marketplace import settings
-from vendors.models import Vendor, OpeningHour
+from vendors.models import Vendor
 
 
 def get_vendor(request):
