@@ -176,11 +176,11 @@ def delete_food(request, pk=None):
 
 
 def opening_hours(request):
-    opening_hours = OpeningHour.objects.filter(vendor=get_vendor(request)).order_by('day')
+    open_hours = OpeningHour.objects.filter(vendor=get_vendor(request)).order_by('day')
     form = OpeningHourForm()
     context = {
         'form': form,
-        'opening_hours': opening_hours,
+        'opening_hours': open_hours,
     }
     return render(request, 'vendors/opening_hours.html', context)
 

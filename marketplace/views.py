@@ -18,7 +18,7 @@ from vendors.utils import get_vendor
 
 
 def marketplace(request):
-    vendors = Vendor.objects.filter(is_approved=True, user__is_active=True)
+    vendors = Vendor.objects.is_valid_vendor()
     vendors_count = vendors.count()
     context = {
         'vendors': vendors,
@@ -37,9 +37,10 @@ def vendor_detail(request, vendor_slug):
     )
     now = datetime.now()
     opening_hours = OpeningHour.objects.filter(vendor=vendor).order_by('day')
+    day = datetime.isoweekday(now)
     context = dict()
     try:
-        today = OpeningHour.objects.get(vendor=vendor, day=datetime.isoweekday(now))
+        today = OpeningHour.objects.get_by_vendor_and_day(vendor=vendor, day=day)
         context.update({'today': today})
     except Exception:
         pass
@@ -162,16 +163,15 @@ def search(request):
 
     fetch_vendors_by_fooditems = FoodItem.objects.filter(food_title__icontains=keyword, is_available=True) \
         .values_list('vendor', flat=True)
-    vendors = Vendor.objects.filter(Q(id__in=fetch_vendors_by_fooditems) |
-                                    Q(vendor_name__icontains=keyword, is_approved=True, user__is_active=True))
+    vendors = Vendor.objects.is_valid_vendor().filter(Q(id__in=fetch_vendors_by_fooditems) |
+                                                      Q(vendor_name__icontains=keyword))
 
     if latitude and longitude and radius:
         pnt = GEOSGeometry("POINT(%s %s)" % (longitude, latitude))
-        vendors = Vendor.objects.filter(Q(id__in=fetch_vendors_by_fooditems) |
-                                        Q(vendor_name__icontains=keyword, is_approved=True, user__is_active=True),
-                                        user_profile__location__distance_lte=(pnt, D(km=radius))
-                                        ).annotate(distance=Distance("user_profile__location", pnt)).order_by(
-            "distance")
+        vendors = Vendor.objects.is_valid_vendor().filter(Q(id__in=fetch_vendors_by_fooditems) |
+                                                       Q(vendor_name__icontains=keyword),
+                                                       user_profile__location__distance_lte=(pnt, D(km=radius))
+                                                       ).annotate(distance=Distance("user_profile__location", pnt)).order_by("distance")
         for vendor in vendors:
             vendor.kms = round(vendor.distance.km, 1)
 

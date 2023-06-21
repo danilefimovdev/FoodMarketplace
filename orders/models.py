@@ -24,6 +24,11 @@ class Payment(models.Model):
         return self.transaction_id
 
 
+class OrderQuerySet(models.QuerySet):
+    def paid_orders_by_user(self, user):
+        return self.filter(user=user, is_ordered=True)
+
+
 class Order(models.Model):
     STATUS = (
         ('New', 'New'),
@@ -53,6 +58,8 @@ class Order(models.Model):
     is_ordered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = OrderQuerySet().as_manager()
 
     @property
     def name(self):

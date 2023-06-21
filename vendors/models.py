@@ -1,9 +1,13 @@
 from datetime import time, datetime
-
 from django.db import models
-
 from accounts.models import UserProfile, User
 from accounts.utils import send_notification
+
+
+class VendorQuerySet(models.QuerySet):
+
+    def is_valid_vendor(self):
+        return self.filter(is_approved=True, user__is_active=True)
 
 
 class Vendor(models.Model):
@@ -16,13 +20,15 @@ class Vendor(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
+    objects = VendorQuerySet().as_manager()
+
     def __str__(self):
         return self.vendor_name
 
     def is_open(self):
         now = datetime.now()
         today = datetime.isoweekday(now)
-        current_opening_hours = OpeningHour.objects.get(vendor=self, day=today)
+        current_opening_hours = OpeningHour.objects.get_by_vendor_and_day(self, today)
 
         current_time = now.strftime("%H:%M:%S")
         if not current_opening_hours.is_closed:
@@ -59,17 +65,23 @@ class Vendor(models.Model):
 
 
 DAYS = [
-    (1, ("Monday")),
-    (2, ("Tuesday")),
-    (3, ("Wednesday")),
-    (4, ("Thursday")),
-    (5, ("Friday")),
-    (6, ("Saturday")),
-    (7, ("Sunday")),
+    (1, "Monday"),
+    (2, "Tuesday"),
+    (3, "Wednesday"),
+    (4, "Thursday"),
+    (5, "Friday"),
+    (6, "Saturday"),
+    (7, "Sunday"),
 ]
 
 
 HOUR_OF_DAY_24 = [(time(h, m).strftime('%I:%M %p'), time(h, m).strftime('%I:%M %p')) for h in range(0, 24) for m in (0, 30)]
+
+
+class OpeningHourQuerySet(models.QuerySet):
+
+    def get_by_vendor_and_day(self, vendor, day):
+        return self.get(vendor=vendor, day=day)
 
 
 class OpeningHour(models.Model):
@@ -78,6 +90,8 @@ class OpeningHour(models.Model):
     from_hour = models.CharField(choices=HOUR_OF_DAY_24, max_length=10, blank=True)
     to_hour = models.CharField(choices=HOUR_OF_DAY_24, max_length=10, blank=True)
     is_closed = models.BooleanField(default=False)
+
+    objects = OpeningHourQuerySet().as_manager()
 
     class Meta:
         ordering = ('day', '-from_hour')

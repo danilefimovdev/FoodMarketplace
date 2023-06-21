@@ -34,7 +34,7 @@ def c_profile(request):
 
 @login_required
 def my_orders(request):
-    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('created_at')[::-1]
+    orders = Order.objects.paid_orders_by_user(user=request.user).order_by('created_at')[::-1]
     return render(request, 'customers/my_orders.html', context={'orders': orders})
 
 

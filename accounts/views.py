@@ -155,7 +155,7 @@ def dashboard(request):
         template = 'accounts/vendor_dashboard.html'
     else:  # request.user.role == customers:
         customer = UserProfile.objects.get(user=user)
-        recent_orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')[:5]
+        recent_orders = Order.objects.paid_orders_by_user(user=request.user).order_by('-created_at')[:5]
         context = {
             'customers': customer,  # find out is the customer and vendor required to be past in context
             'recent_orders': recent_orders,
