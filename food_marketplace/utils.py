@@ -1,6 +1,3 @@
-from itertools import repeat
-
-
 def get_or_set_current_location(request):
     if "lat" in request.session:
         latitude = request.session['lat']
@@ -13,3 +10,4 @@ def get_or_set_current_location(request):
     else:
         return None
     return longitude, latitude
+

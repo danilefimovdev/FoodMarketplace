@@ -15,7 +15,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG")
 ALLOWED_HOSTS = ['172.105.53.146', 'foodonlinemarketplace.store', 'www.foodonlinemarketplace.store', '127.0.0.1']
 
-
+DOMAIN = '127.0.0.1:8000'
 # Application definition
 
 INSTALLED_APPS = [

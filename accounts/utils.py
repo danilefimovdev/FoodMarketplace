@@ -1,14 +1,12 @@
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
-from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
 from django.db.models import QuerySet
 from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-
 from accounts.models import User
-from food_marketplace import settings
 
 
 def detect_user(user: User):
@@ -19,8 +17,8 @@ def detect_user(user: User):
     return redirect_url
 
 
-def send_email(request: HttpRequest, user: User, email_template: str, message_subject: str):
-    current_site = get_current_site(request)
+def send_email(user: User, email_template: str, message_subject: str):
+    current_site = settings.DOMAIN
     message = render_to_string(email_template, {
         'user': user,
         'domain': current_site,

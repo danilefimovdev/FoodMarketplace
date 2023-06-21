@@ -25,6 +25,7 @@ class Vendor(models.Model):
     def __str__(self):
         return self.vendor_name
 
+    @property
     def is_open(self):
         now = datetime.now()
         today = datetime.isoweekday(now)

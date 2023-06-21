@@ -7,6 +7,7 @@ from django.utils.http import urlsafe_base64_decode
 from accounts.forms import UserForm
 from accounts.models import UserProfile, User
 from django.contrib import messages, auth
+from accounts.services.user_registration_service import RegistrationDataRow, register_new_user
 from accounts.utils import detect_user, send_email, get_total_of_orders
 from orders.models import Order
 from vendors.forms import VendorForm
@@ -19,31 +20,26 @@ from vendors.models import Vendor
 #   if user is already autorized.
 
 def registerUser(request):
+
     if request.user.is_authenticated:
         messages.info(request, f'You are already logged in as "{request.user.username}"')
-        return redirect('register-user')
+        return redirect('home')
+
     elif request.method == 'POST':
-        print(request.POST)
         form = UserForm(request.POST)
         if form.is_valid():
-            first_name = form.cleaned_data['first_name']
-            last_name = form.cleaned_data['last_name']
-            username = form.cleaned_data['username']
-            email = form.cleaned_data['email']
-            password = form.cleaned_data['password']
-            user = User.objects.create_user(first_name=first_name, last_name=last_name,
-                                            username=username, email=email, password=password)
-            user.role = User.CUSTOMER
-            user.save()
-
-            message_subject = 'Reset Your Password'
-            email_template = 'accounts/email/reset_password_email.html'
-            send_email(request, user, email_template, message_subject)
-
+            form_data = RegistrationDataRow(first_name=form.cleaned_data['first_name'],
+                                            last_name=form.cleaned_data['last_name'],
+                                            username=form.cleaned_data['username'],
+                                            email=form.cleaned_data['email'],
+                                            password=form.cleaned_data['password'])
+            register_new_user(form_data)
             messages.success(request, 'You have registered successfully')
             return redirect('home')
+
     else:
         form = UserForm()
+
     context = {
         'form': form,
     }
@@ -70,7 +66,7 @@ def registerVendor(request):
 
             message_subject = 'Please activate your account'
             email_template = 'accounts/email/account_verification_email.html'
-            send_email(request, user, email_template, message_subject)
+            send_email(user, email_template, message_subject)
 
             vendor = v_form.save(commit=False)
             vendor.user = user
@@ -189,7 +185,7 @@ def forgot_password(request):
 
             message_subject = 'Reset Your Password'
             email_template = 'accounts/email/reset_password_email.html'
-            send_email(request, user, email_template, message_subject)
+            send_email(user, email_template, message_subject)
 
             messages.success(request, 'Password reset link has been sent to your email address')
             return redirect('login')
