@@ -8,6 +8,7 @@ from accounts.forms import UserForm
 from accounts.models import UserProfile, User
 from django.contrib import messages, auth
 
+from accounts.services.reset_password_service import send_reset_password_email
 from accounts.services.user_activation_service import activate_user_account
 from accounts.services.user_registration_service import RegistrationDataRow, register_new_user
 from accounts.utils import detect_user, send_email, get_total_of_orders
@@ -174,17 +175,15 @@ def activate(request, uidb64, token):
     return redirect('my-account')
 
 
+# TODO: add reset password with login
 def forgot_password(request):
+    """Send reset password email"""
+
     if request.method == 'POST':
         email = request.POST['email']
+        is_sent = send_reset_password_email(email)
 
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email__exact=email)
-
-            message_subject = 'Reset Your Password'
-            email_template = 'accounts/email/reset_password_email.html'
-            send_email(user, email_template, message_subject)
-
+        if is_sent:
             messages.success(request, 'Password reset link has been sent to your email address')
             return redirect('login')
         else:
@@ -197,7 +196,7 @@ def forgot_password(request):
 def reset_password_validate(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
-        user = User._default_manager.get(pk=uid)
+        user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
     if user is not None and default_token_generator.check_token(user, token):
