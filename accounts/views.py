@@ -7,17 +7,19 @@ from django.utils.http import urlsafe_base64_decode
 from accounts.forms import UserForm
 from accounts.models import UserProfile, User
 from django.contrib import messages, auth
+
+from accounts.services.user_activation_service import activate_user_account
 from accounts.services.user_registration_service import RegistrationDataRow, register_new_user
 from accounts.utils import detect_user, send_email, get_total_of_orders
 from orders.models import Order
 from vendors.forms import VendorForm
 from vendors.models import Vendor
 
-
 # TODO add next functionality (RegisterVendor html):
 #   if user is authorized, then display only Register
 #   and in registration page do not display 'login, if you have an account' ability
 #   if user is already autorized.
+
 
 def registerUser(request):
 
@@ -161,14 +163,10 @@ def dashboard(request):
 
 
 def activate(request, uidb64, token):
-    try:
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = User._default_manager.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-    if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True
-        user.save()
+
+    activated = activate_user_account(uidb64, token)
+
+    if activated:
         messages.success(request, 'Your account has been activated!')
     else:
         messages.error(request, 'Invalid activation link')
