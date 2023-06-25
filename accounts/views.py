@@ -8,7 +8,8 @@ from accounts.forms import UserForm
 from accounts.models import UserProfile, User
 from django.contrib import messages, auth
 
-from accounts.services.reset_password_service import send_reset_password_email
+from accounts.services.reset_password_service import send_reset_password_email, set_new_password
+from accounts.services.services import validate_user
 from accounts.services.user_activation_service import activate_user_account
 from accounts.services.user_registration_service import RegistrationDataRow, register_new_user
 from accounts.utils import detect_user, send_email, get_total_of_orders
@@ -22,7 +23,8 @@ from vendors.models import Vendor
 #   if user is already autorized.
 
 
-def registerUser(request):
+def register_user(request):
+    """Register new user"""
 
     if request.user.is_authenticated:
         messages.info(request, f'You are already logged in as "{request.user.username}"')
@@ -37,7 +39,7 @@ def registerUser(request):
                                             email=form.cleaned_data['email'],
                                             password=form.cleaned_data['password'])
             register_new_user(form_data)
-            messages.success(request, 'You have registered successfully')
+            messages.success(request, 'You have registered successfully. Check your email.')
             return redirect('home')
 
     else:
@@ -92,6 +94,7 @@ def registerVendor(request):
 
 
 def logout(request):
+
     if not request.user.is_authenticated:
         messages.info(request, 'You are not logged in')
     auth.logout(request)
@@ -99,7 +102,7 @@ def logout(request):
     return redirect('login')
 
 
-    #TODO add ability to login either username or email
+# TODO add ability to login either username or email
 def login(request):
     if request.user.is_authenticated:
         messages.info(request, f'You are already logged in as "{request.user.username}"')
@@ -163,7 +166,8 @@ def dashboard(request):
     return render(request, template, context=context)
 
 
-def activate(request, uidb64, token):
+def activate_user(request, uidb64, token):
+    """Activate user account"""
 
     activated = activate_user_account(uidb64, token)
 
@@ -194,13 +198,10 @@ def forgot_password(request):
 
 
 def reset_password_validate(request, uidb64, token):
-    try:
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-    if user is not None and default_token_generator.check_token(user, token):
-        request.session['uid'] = uid
+
+    validated_user = validate_user(uidb64, token)
+    if validated_user:
+        request.session['uid'] = validated_user.pk
         messages.info(request, 'Please reset your password')
         return redirect('reset-password')
     else:
@@ -209,20 +210,22 @@ def reset_password_validate(request, uidb64, token):
 
 
 def reset_password(request):
+
     if request.session.get('uid') is None:
         return redirect('home')
+
     if request.method == 'POST':
         password = request.POST['password']
         confirm_password = request.POST['confirm_password']
+
         if password == confirm_password:
             pk = request.session.get('uid')
-            user = User.objects.get(pk=pk)
-            user.set_password(password)
-            user.is_active = True
-            user.save()
+            set_new_password(pk, password)
             messages.success(request, 'Password reset successfully')
             return redirect('login')
+
         else:
             messages.error(request, 'Passwords do not match')
             return redirect('reset-password')
+
     return render(request, 'accounts/reset_password.html')

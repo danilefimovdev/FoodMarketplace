@@ -23,10 +23,18 @@ def _send_email(user: User) -> None:
 
 def send_reset_password_email(email: str) -> bool:
 
+    success = False
     user = _get_user_from_email(email)
     if user:
         _send_email(user)
         success = True
-    else:
-        success = False
+
     return success
+
+
+def set_new_password(pk: int, password: str) -> None:
+
+    user = User.objects.get(pk=pk)
+    user.set_password(password)
+    user.is_active = True
+    user.save()
