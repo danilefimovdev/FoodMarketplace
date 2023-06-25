@@ -1,6 +1,4 @@
 from django import forms
-
-from accounts.models import UserProfile
 from accounts.validators import allow_only_images_validator
 from vendors.models import Vendor, OpeningHour
 

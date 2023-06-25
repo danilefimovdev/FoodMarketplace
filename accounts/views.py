@@ -1,23 +1,20 @@
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import render, redirect
-from django.template.defaultfilters import slugify
-from django.utils.http import urlsafe_base64_decode
+
 from accounts.forms import UserForm
 from accounts.models import UserProfile, User
 from django.contrib import messages, auth
-
 from accounts.services.reset_password_service import send_reset_password_email, set_new_password
 from accounts.services.services import validate_user
-from accounts.services.user_activation_service import activate_user_account
-from accounts.services.user_registration_service import RegistrationDataRow, register_new_user
-from accounts.utils import detect_user, send_email, get_total_of_orders
+from accounts.services.user_registration_service import register_new_user, activate_user_account, \
+    UserRegistrationDataRow, VendorRegistrationDataRow, register_new_vendor
+from accounts.utils import detect_user_role, get_total_of_orders, redirect_if_authorized
 from orders.models import Order
 from vendors.forms import VendorForm
 from vendors.models import Vendor
 
-# TODO add next functionality (RegisterVendor html):
+# TODO add next functionality (register_vendor html):
 #   if user is authorized, then display only Register
 #   and in registration page do not display 'login, if you have an account' ability
 #   if user is already autorized.
@@ -26,111 +23,107 @@ from vendors.models import Vendor
 def register_user(request):
     """Register new user"""
 
-    if request.user.is_authenticated:
-        messages.info(request, f'You are already logged in as "{request.user.username}"')
-        return redirect('home')
+    is_authorized, redirect_ = redirect_if_authorized(request)
+    if not is_authorized:
+        if request.method == 'POST':
+            form = UserForm(request.POST)
+            if form.is_valid():
+                form_data = UserRegistrationDataRow(
+                    first_name=form.cleaned_data['first_name'],
+                    last_name=form.cleaned_data['last_name'],
+                    username=form.cleaned_data['username'],
+                    email=form.cleaned_data['email'],
+                    password=form.cleaned_data['password']
+                )
+                register_new_user(form_data, role=User.CUSTOMER)
+                messages.success(request, 'You have registered successfully. Check your email.')
+                return redirect('home')
+        else:
+            form = UserForm()
 
-    elif request.method == 'POST':
-        form = UserForm(request.POST)
-        if form.is_valid():
-            form_data = RegistrationDataRow(first_name=form.cleaned_data['first_name'],
-                                            last_name=form.cleaned_data['last_name'],
-                                            username=form.cleaned_data['username'],
-                                            email=form.cleaned_data['email'],
-                                            password=form.cleaned_data['password'])
-            register_new_user(form_data)
-            messages.success(request, 'You have registered successfully. Check your email.')
-            return redirect('home')
-
-    else:
-        form = UserForm()
-
-    context = {
-        'form': form,
-    }
-    return render(request, 'accounts/registerUser.html', context)
-
-
-def registerVendor(request):
-    if request.user.is_authenticated:
-        messages.info(request, f'You are already logged in as "{request.user.username}"')
-        return redirect('register-user')
-    elif request.method == 'POST':
-        form = UserForm(request.POST)
-        v_form = VendorForm(request.POST, request.FILES)
-        if form.is_valid() and v_form.is_valid():
-            first_name = form.cleaned_data['first_name']
-            last_name = form.cleaned_data['last_name']
-            username = form.cleaned_data['username']
-            email = form.cleaned_data['email']
-            password = form.cleaned_data['password']
-            user = User.objects.create_user(first_name=first_name, last_name=last_name,
-                                            username=username, email=email, password=password)
-            user.role = User.VENDOR
-            user.save()
-
-            message_subject = 'Please activate your account'
-            email_template = 'accounts/email/account_verification_email.html'
-            send_email(user, email_template, message_subject)
-
-            vendor = v_form.save(commit=False)
-            vendor.user = user
-            user_profile = UserProfile.objects.get(user=user)
-            vendor.user_profile = user_profile
-            vendor_name = v_form.cleaned_data['vendor_name']
-            vendor.vendor_slug = slugify(vendor_name)
-            vendor.save()
-
-            messages.success(request, 'You have registered successfully. Please wait for the approval')
-            return redirect('home')
-    else:
-        form = UserForm()
-        v_form = VendorForm()
         context = {
             'form': form,
-            'v_form': v_form,
         }
-        return render(request, 'accounts/registerVendor.html', context=context)
+        return render(request, 'accounts/register_user.html', context)
+    else:
+        return redirect_
 
 
+def register_vendor(request):
+
+    is_authorized, redirect_ = redirect_if_authorized(request)
+
+    if not is_authorized:
+
+        if request.method == 'POST':
+            u_form = UserForm(request.POST)
+            v_form = VendorForm(request.POST, request.FILES)
+
+            if u_form.is_valid() and v_form.is_valid():
+                u_form_data = UserRegistrationDataRow(
+                    first_name=u_form.cleaned_data['first_name'],
+                    last_name=u_form.cleaned_data['last_name'],
+                    username=u_form.cleaned_data['username'],
+                    email=u_form.cleaned_data['email'],
+                    password=u_form.cleaned_data['password']
+                )
+                v_form_data = VendorRegistrationDataRow(
+                    vendor_name=v_form.cleaned_data['vendor_name'],
+                    vendor_license=v_form.cleaned_data['vendor_license']
+                )
+                register_new_vendor(u_form_data, v_form_data)
+                messages.success(request, 'You have registered successfully. Check your email and wait for the approval')
+                return redirect('home')
+        else:
+            context = {
+                'u_form': UserForm(),
+                'v_form': VendorForm(),
+            }
+            return render(request, 'accounts/register_vendor.html', context=context)
+    else:
+        return redirect_
+
+
+@login_required
 def logout(request):
 
-    if not request.user.is_authenticated:
-        messages.info(request, 'You are not logged in')
     auth.logout(request)
     messages.info(request, 'You logged out')
+
     return redirect('login')
 
 
 # TODO add ability to login either username or email
 def login(request):
-    if request.user.is_authenticated:
-        messages.info(request, f'You are already logged in as "{request.user.username}"')
-        return redirect('register-user')
 
-    elif request.method == 'POST':
-        email = request.POST['email']
-        password = request.POST['password']
-        user = auth.authenticate(email=email, password=password)
+    is_authorized, redirect_ = redirect_if_authorized(request)
 
-        if user is not None:
-            auth.login(request, user)
-            messages.success(request, 'You are logged in')
-            return redirect('my-account')
+    if not is_authorized:
+        if request.method == 'POST':
+            email = request.POST['email']
+            password = request.POST['password']
+            user = auth.authenticate(email=email, password=password)
+
+            if user is not None:
+                auth.login(request, user)
+                messages.success(request, 'You are logged in')
+                return redirect('my-account')
+            else:
+                messages.warning(request, 'You put invalid password or email')
+                return redirect('login')
         else:
-            messages.warning(request, 'You put invalid password or email')
-            return redirect('login')
+            return render(request, 'accounts/login.html')
     else:
-        return render(request, 'accounts/login.html')
+        return redirect_
 
 
-@login_required(login_url='login')
+@login_required
 def my_account(request):
-    redirect_url = detect_user(request.user)
+    redirect_url = detect_user_role(request.user)
     return redirect(redirect_url)
 
 
-@login_required(login_url='login')
+@login_required
 def dashboard(request):
     vendor = 1
     customer = 2
