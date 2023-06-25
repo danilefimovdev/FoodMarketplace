@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.db.models import QuerySet
@@ -26,10 +27,10 @@ def detect_user_role(user: User):
 
     if user.role is None and user.is_superadmin is True:  # case for superuser
         redirect_url = '/admin'
-    elif user.role == 1 or user.role == 2:  # case for vendor/customer
-        redirect_url = 'dashboard'
-    else:
-        redirect_url = False
+    elif user.role == User.VENDOR:
+        redirect_url = 'vendor-dashboard'
+    else:  # user.role == User.CUSTOMER
+        redirect_url = 'customer-dashboard'
     return redirect_url
 
 
@@ -69,10 +70,3 @@ def check_role_customer(user):
         return True
     else:
         raise PermissionError
-
-
-def get_total_of_orders(orders: QuerySet) -> float:
-    revenue = 0
-    for order in orders:
-        revenue += order.get_data_by_vendor()['total']
-    return round(revenue, 2)

@@ -1,15 +1,14 @@
 from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
+from django.contrib import messages, auth
 
 from accounts.forms import UserForm
-from accounts.models import UserProfile, User
-from django.contrib import messages, auth
-from accounts.services.reset_password_service import send_reset_password_email, set_new_password
-from accounts.services.services import validate_user
-from accounts.services.user_registration_service import register_new_user, activate_user_account, \
-    UserRegistrationDataRow, VendorRegistrationDataRow, register_new_vendor
-from accounts.utils import detect_user_role, get_total_of_orders, redirect_if_authorized
+from accounts.models import User
+from accounts.services import send_reset_password_email, set_new_password, validate_user, register_new_user, \
+    activate_user_account, UserRegistrationDataRow, VendorRegistrationDataRow, register_new_vendor
+from accounts.utils import detect_user_role, redirect_if_authorized
 from orders.models import Order
 from vendors.forms import VendorForm
 from vendors.models import Vendor
@@ -20,8 +19,8 @@ from vendors.models import Vendor
 #   if user is already autorized.
 
 
-def register_user(request):
-    """Register new user"""
+def register_customer(request):
+    """Register new customer"""
 
     is_authorized, redirect_ = redirect_if_authorized(request)
     if not is_authorized:
@@ -50,6 +49,7 @@ def register_user(request):
 
 
 def register_vendor(request):
+    """Register new vendor"""
 
     is_authorized, redirect_ = redirect_if_authorized(request)
 
@@ -86,6 +86,7 @@ def register_vendor(request):
 
 @login_required
 def logout(request):
+    """Logout from account"""
 
     auth.logout(request)
     messages.info(request, 'You logged out')
@@ -95,6 +96,7 @@ def logout(request):
 
 # TODO add ability to login either username or email
 def login(request):
+    """Log in account"""
 
     is_authorized, redirect_ = redirect_if_authorized(request)
 
@@ -119,48 +121,44 @@ def login(request):
 
 @login_required
 def my_account(request):
+    """Redirect to dashboard depends on user role"""
+
     redirect_url = detect_user_role(request.user)
     return redirect(redirect_url)
 
 
 @login_required
-def dashboard(request):
-    vendor = 1
-    customer = 2
-    user = request.user
-    if request.user.role is None:  # it is admin
-        return redirect('/admin')
-    if request.user.role == vendor:
-        vendor = Vendor.objects.get(user=user)
-        orders = Order.objects.filter(vendor__in=[vendor.id], is_ordered=True).order_by('-created_at')
-        recent_orders = orders[:5]
-        total_revenue = get_total_of_orders(orders)
-        today = datetime.today()
-        current_month_orders = Order.objects.filter(vendor__in=[vendor.id],
-                                                    created_at__month=today.month,
-                                                    created_at__year=today.year)
-        month_revenue = get_total_of_orders(current_month_orders)
-        context = {
-            'orders': orders,
-            'orders_count': orders.count(),
-            'recent_orders': recent_orders,
-            'total_revenue': total_revenue,
-            'month_revenue': month_revenue,
-        }
-        template = 'accounts/vendor_dashboard.html'
-    else:  # request.user.role == customers:
-        customer = UserProfile.objects.get(user=user)
-        recent_orders = Order.objects.paid_orders_by_user(user=request.user).order_by('-created_at')[:5]
-        context = {
-            'customers': customer,  # find out is the customer and vendor required to be past in context
-            'recent_orders': recent_orders,
-        }
-        template = 'accounts/customer_dashboard.html'
-    return render(request, template, context=context)
+def vendor_dashboard(request):
+    """Represent vendor dashboard"""
+
+    vendor = Vendor.objects.get(user=request.user)
+    orders = Order.objects.filter(vendor__in=[vendor.id], is_ordered=True).order_by('-created_at')
+    recent_orders = orders[:10]
+    total_revenue = Order.objects.get_total_revenue(orders)
+    current_month_orders = Order.objects.current_month_orders_by_vendor(vendor, datetime.today())
+    month_revenue = Order.objects.get_total_revenue(current_month_orders)
+    context = {
+        'orders_count': orders.count(),
+        'recent_orders': recent_orders,
+        'total_revenue': total_revenue,
+        'month_revenue': month_revenue,
+    }
+    return render(request, 'accounts/vendor_dashboard.html', context=context)
+
+
+@login_required
+def customer_dashboard(request):
+    """Represent customer dashboard"""
+
+    recent_orders = Order.objects.paid_orders_by_user(user=request.user).order_by('-created_at')[:5]
+    context = {
+        'recent_orders': recent_orders,
+    }
+    return render(request, 'accounts/customer_dashboard.html', context=context)
 
 
 def activate_user(request, uidb64, token):
-    """Activate user account"""
+    """Activate user account from email"""
 
     activated = activate_user_account(uidb64, token)
 
@@ -191,6 +189,7 @@ def forgot_password(request):
 
 
 def reset_password_validate(request, uidb64, token):
+    """Validate user and put him in session data"""
 
     validated_user = validate_user(uidb64, token)
     if validated_user:
@@ -203,6 +202,7 @@ def reset_password_validate(request, uidb64, token):
 
 
 def reset_password(request):
+    """Set new password for account"""
 
     if request.session.get('uid') is None:
         return redirect('home')

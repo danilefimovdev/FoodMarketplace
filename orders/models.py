@@ -1,6 +1,8 @@
 import json
 
 from django.db import models
+from django.db.models import QuerySet
+
 from accounts.models import User
 from menu.models import FoodItem
 from vendors.models import Vendor
@@ -27,6 +29,28 @@ class Payment(models.Model):
 class OrderQuerySet(models.QuerySet):
     def paid_orders_by_user(self, user):
         return self.filter(user=user, is_ordered=True)
+
+    def current_month_orders_by_vendor(self, vendor, today):
+        return Order.objects.filter(vendor__in=[vendor.id],
+                                    created_at__month=today.month,
+                                    created_at__year=today.year)
+
+
+class OrderManager(models.Manager):
+    def get_queryset(self):
+        return OrderQuerySet(self.model, using=self._db)
+
+    def get_total_revenue(self, orders: QuerySet) -> float:
+        revenue = 0
+        for order in orders:
+            revenue += order.get_data_by_vendor()['total']
+        return round(revenue, 2)
+
+    def paid_orders_by_user(self, user):
+        return self.get_queryset().paid_orders_by_user(user)
+
+    def current_month_orders_by_vendor(self, vendor, today):
+        return self.get_queryset().current_month_orders_by_vendor(vendor, today)
 
 
 class Order(models.Model):
@@ -59,7 +83,7 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    objects = OrderQuerySet().as_manager()
+    objects = OrderManager()
 
     @property
     def name(self):

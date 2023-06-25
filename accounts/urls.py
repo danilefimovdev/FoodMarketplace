@@ -3,12 +3,13 @@ from accounts import views
 
 urlpatterns = [
     path('', views.my_account),
-    path('register-user/', views.register_user, name='register-user'),
+    path('register-user/', views.register_customer, name='register-user'),
     path('register-vendor/', views.register_vendor, name='register-vendor'),
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
     path('my_account/', views.my_account, name='my-account'),
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/', views.vendor_dashboard, name='vendor-dashboard'),
+    path('dashboard/', views.customer_dashboard, name='customer-dashboard'),
     path('activate/<uidb64>/<token>', views.activate_user, name='activate'),
 
     path('forgot_password/', views.forgot_password, name='forgot-password'),

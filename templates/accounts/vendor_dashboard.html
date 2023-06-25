@@ -71,7 +71,7 @@
 																<th scope="col">Status</th>
 																<th scope="col">Action</th>
 															</tr>
-														{% for order in orders %}
+														{% for order in recent_orders %}
 															<tr>
 																<td><a href="#" data-toggle="modal" style="color: black;" data-target="#order-det-22606">{{ order.order_number }}</a></td>
 																<td>{{ order.created_at }}</td>

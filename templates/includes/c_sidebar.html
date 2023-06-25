@@ -2,7 +2,7 @@
     <div class="user-nav-list">
         <ul>
             <li class="{% if 'dashboard' in request.path or '/customer/' == request.path %}active{% endif %}">
-                <a href="{% url 'dashboard' %}"><i class="icon-dashboard3"></i>Dashboard</a>
+                <a href="{% url 'customer-dashboard' %}"><i class="icon-dashboard3"></i>Dashboard</a>
             </li>
             <li class="{% if 'order' in request.path %}active{% endif %}">
                 <a href="{% url 'c-my-orders' %}"><i class="icon-add_shopping_cart"></i>My orders</a>
