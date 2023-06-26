@@ -33,7 +33,6 @@ def v_profile(request):
     else:
         profile_form = UserProfileForm(instance=user_profile)
         vendor_form = VendorForm(instance=vendor)
-        opening_hours
 
     context = {
         'profile_form': profile_form,
@@ -175,6 +174,8 @@ def delete_food(request, pk=None):
     return redirect('fooditems-by-category', food_item.category.id)
 
 
+@login_required()
+@user_passes_test(check_role_vendor)
 def opening_hours(request):
     open_hours = OpeningHour.objects.filter(vendor=get_vendor(request)).order_by('day')
     form = OpeningHourForm()
@@ -185,6 +186,8 @@ def opening_hours(request):
     return render(request, 'vendors/opening_hours.html', context)
 
 
+@login_required()
+@user_passes_test(check_role_vendor)
 def add_opening_hours(request):
     if request.user.is_authenticated:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'POST':
@@ -229,6 +232,8 @@ def add_opening_hours(request):
         return JsonResponse({'status': 'failed', 'message': 'You are not logged in'})
 
 
+@login_required()
+@user_passes_test(check_role_vendor)
 def remove_opening_hours(request, pk=None):
     if request.user.is_authenticated:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -241,9 +246,17 @@ def remove_opening_hours(request, pk=None):
         return JsonResponse({'status': 'failed', 'message': 'You are not logged in'})
 
 
+@login_required()
+@user_passes_test(check_role_vendor)
 def order_detail(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, is_ordered=True)
     ordered_food = OrderedFood.objects.filter(order=order, fooditem__vendor__in=[get_vendor(request)])
+    # if ordered_food is None:
+    #     return redirect('my-account')
+    # print(111111111111)
+    # print(ordered_food)
+    # print(111111111111)
+    # TODO: ????????? ????????????? ??????? ? ??????, ???? ????? ??????? ? ??? ???
 
     context = {
         'order': order,

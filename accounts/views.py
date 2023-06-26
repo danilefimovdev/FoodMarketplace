@@ -121,7 +121,7 @@ def login(request):
 
 @login_required
 def my_account(request):
-    """Redirect to dashboard depends on user role"""
+    """Redirect to dashboard depends on user's role"""
 
     redirect_url = detect_user_role(request.user)
     return redirect(redirect_url)

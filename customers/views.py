@@ -1,14 +1,18 @@
 import json
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from accounts.forms import UserProfileForm, UserInfoForm
 from accounts.models import UserProfile
+from accounts.utils import check_role_customer
 from orders.models import Order, OrderedFood
 
 
-@login_required
-def c_profile(request):
+@login_required()
+@user_passes_test(check_role_customer)
+def customer_profile(request):
+    """customer profile with editing ability"""
+
     profile = get_object_or_404(UserProfile, user=request.user)
     if request.method == 'POST':
         profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
@@ -32,16 +36,20 @@ def c_profile(request):
     return render(request, 'customers/c_profile.html', context=context)
 
 
-@login_required
+@login_required()
+@user_passes_test(check_role_customer)
 def my_orders(request):
-    orders = Order.objects.paid_orders_by_user(user=request.user).order_by('created_at')[::-1]
-    return render(request, 'customers/my_orders.html', context={'orders': orders})
+    orders = Order.objects.paid_orders_by_user(user=request.user)
+    context = {'orders': orders}
+    return render(request, 'customers/my_orders.html', context=context)
 
 
+@login_required()
+@user_passes_test(check_role_customer)
 def order_details(request, order_number):
-    order = get_object_or_404(Order, order_number=order_number, is_ordered=True)
+    order = Order.objects.get(order_number=order_number, is_ordered=True)
     if order.user != request.user:
-        return redirect('dashboard')
+        return redirect('my-account')
     else:
         ordered_food = OrderedFood.objects.filter(order=order)
         total = order.total

@@ -4,7 +4,7 @@ from customers import views
 
 urlpatterns = [
     path('', account_views.customer_dashboard, name='customer'),
-    path('profile/', views.c_profile, name='c-profile'),
+    path('profile/', views.customer_profile, name='c-profile'),
     path('my_orders/', views.my_orders, name='c-my-orders'),
     path('order-details/<int:order_number>/', views.order_details, name='c-order-details'),
     ]
