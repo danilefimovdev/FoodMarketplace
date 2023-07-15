@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 from accounts.models import UserProfile
 from marketplace.context_processors import get_cart_counter, get_cart_amounts
 from marketplace.models import Cart
+from marketplace.services.cart_manipulation_services import check_does_fooditem_exist, add_item_to_cart
 from marketplace.services.search_filtering_service import search_vendors_by_keyword, get_all_valid_vendors, \
     filter_vendors_by_geo_position
 from menu.models import Category, FoodItem
@@ -16,12 +17,9 @@ from vendors.models import Vendor, OpeningHour
 
 
 def marketplace(request):
-    vendors = Vendor.objects.valid_vendors()
-    vendors_count = vendors.count()
-    context = {
-        'vendors': vendors,
-        'vendors_count': vendors_count,
-    }
+
+    context = get_all_valid_vendors()
+
     return render(request, 'marketplace/listings.html', context)
 
 
@@ -57,37 +55,23 @@ def vendor_detail(request, vendor_slug):
     return render(request, 'marketplace/vendor_detail.html', context)
 
 
+@login_required()
 def add_to_cart(request, food_id):
-    if request.user.is_authenticated:
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            # check if the food item exists
-            try:
-                fooditem = FoodItem.objects.get(id=food_id)
-                # check if the user has already added that food to the cart
-                try:
-                    chkCart = Cart.objects.get(user=request.user, fooditem=food_id)
-                    # increase cart quantity
-                    chkCart.quantity += 1
-                    message = 'Increased the cart quantity'
-                    chkCart.save()
-                except Exception:
-                    # create cart
-                    chkCart = Cart.objects.create(user=request.user, fooditem=fooditem, quantity=1)
-                    message = f"Added '{fooditem.food_title}' to your cart"
-                finally:
-                    return JsonResponse({'status': 'Success',
-                                         'message': message,
-                                         'cart_counter': get_cart_counter(request),
-                                         'qty': chkCart.quantity,
-                                         'cart_amounts': get_cart_amounts(request)})
-            except Exception:
-                return JsonResponse({'status': 'Failed', 'message': 'This food does not exist'})
+    # check is it ajax request
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # check if the food item exists
+        is_existed = check_does_fooditem_exist(food_id)
+        if is_existed:
+            response = add_item_to_cart(food_id=food_id, user_id=request.user.pk, food_title=is_existed['title'])
+            print(response)
+            return JsonResponse(response)
         else:
-            return JsonResponse({'status': 'Failed', 'message': 'Invalid request'})
+            return JsonResponse({'status': 'Failed', 'message': 'This food does not exist'})
     else:
-        return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
+        return JsonResponse({'status': 'Failed', 'message': 'Invalid request'})
 
 
+@login_required()
 def decrease_cart(request, food_id):
     if request.user.is_authenticated:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -119,7 +103,7 @@ def decrease_cart(request, food_id):
         return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
 
 
-@login_required(login_url='login')
+@login_required()
 def cart(request):
     cart_items = Cart.objects.filter(user=request.user).order_by('created_at')
     context = {
@@ -128,6 +112,7 @@ def cart(request):
     return render(request, 'marketplace/cart.html', context)
 
 
+@login_required()
 def delete_cart(request, cart_id):
     if request.user.is_authenticated:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -171,7 +156,7 @@ def search(request):
     return render(request, 'marketplace/listings.html', context=context)
 
 
-@login_required(login_url='login')
+@login_required()
 def checkout(request):
     cart_items = Cart.objects.filter(user=request.user).order_by('created_at')
     cart_count = cart_items.count()
