@@ -26,11 +26,25 @@
 							</div>
 						</div>
 						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 ">
-							<div class="main-search fancy bg-holder">
-								<form action="{% url 'search'%}" method="get">
+							<div class="main-search fancy bg-holder" style="border-radius: 6px;">
+								<form action="{% url 'search'%}" method="get" style="margin-right: -76px">
 									<div class="row">
-										<div class="col-lg-4 col-md-4 col-sm-5 col-xs-12">
-											<div class="field-holder">
+										<div class="btn-group btn-group-toggle col-lg-2 col-md-2 col-sm-2 col-xs-12" data-toggle="buttons">
+										    <label class="btn btn-light active"
+												   style="height: 50px; padding-top: 13px; width: 0px;
+												   border-top-left-radius: 6px; border-bottom-left-radius: 6px;
+												   font-size: 16px;">
+												<input type="radio" name="options" value="vendor" autocomplete="off" checked> Vendor
+										    </label>
+										    <label class="btn btn-light"
+												   style="height: 50px; padding-top: 13px; width: 0px;
+												   border-top-right-radius: 6px; border-bottom-right-radius: 6px;
+												   font-size: 16px;">
+												<input type="radio" name="options" value="fooditem" autocomplete="off"> Food
+										    </label>
+										</div>
+										<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12" style="margin-left: -11px;">
+											<div class="field-holder" style="border-radius: 6px;">
 												<input type="text" name="keyword" placeholder="Resturant or food name">
 											</div>
 										</div>
@@ -38,8 +52,8 @@
 											<div class="field-holder">
 												<ul>
 													<li class="select-location">
-														<div class="foodbakery-locations-fields-group foodbakery-focus-out">
-															<span class="foodbakery-search-location-icon"><i class="icon-location"></i></span>
+														<div class="foodbakery-locations-fields-group foodbakery-focus-out" style="border-radius: 6px; margin-left: -11px;">
+															<span class="foodbakery-search-location-icon" style="margin-left: -11px;"><i class="icon-location"></i></span>
 															<input type="text" name="address" id="id_address" class="location-field-text filter" required placeholder="All Locations" >
 															<input type="hidden" name="lat" id="id_latitude" value="">
 															<input type="hidden" name="long" id="id_longitude" value="">
@@ -49,8 +63,8 @@
 											</div>
 										</div>
 										<div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
-											<select name="radius" id="radius" style="height: 50px;" required>
-												<option value="" selected>Choose radius</option>
+											<select name="radius" id="radius" style="height: 50px; border-radius: 6px; margin-left: -11px;" required>
+												<option value="" selected >Choose radius</option>
 												<option value="1">1km</option>
 												<option value="2">2km</option>
 												<option value="5">5km</option>
@@ -61,9 +75,11 @@
 												<option value="100">100km</option>
 											</select>
 										</div>
-										<div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+										<div class="col-lg-1 col-md-1 col-sm-1 col-xs-12">
 											<div class="field-holder">
-												<input type="submit" value="Search">
+												<button type="submit" class="btn btn-success" style="font-size: 25px; border-radius: 6px; margin-left: -21px;">
+													<i class="bi bi-search"></i>
+                                        		</button>
 											</div>
 										</div>
 									</div>

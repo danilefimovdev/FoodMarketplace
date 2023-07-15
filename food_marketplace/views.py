@@ -16,7 +16,7 @@ def home(request):
         for vendor in vendors:
             vendor.kms = round(vendor.distance.km, 1)
     else:
-        vendors = Vendor.objects.is_valid_vendor()[:8]
+        vendors = Vendor.objects.valid_vendors()[:8]
     top_vendors = vendors[:3]
     return render(request, 'home.html', context={'vendors': vendors,
                                                  'top_vendors': top_vendors})

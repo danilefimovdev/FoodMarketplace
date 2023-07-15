@@ -13,12 +13,12 @@ from marketplace.context_processors import get_cart_counter, get_cart_amounts
 from marketplace.models import Cart
 from menu.models import Category, FoodItem
 from orders.forms import OrderForm
-from vendors.models import Vendor, OpeningHour, DAYS
-from vendors.utils import get_vendor
+from vendors.models import Vendor, OpeningHour
+
 
 
 def marketplace(request):
-    vendors = Vendor.objects.is_valid_vendor()
+    vendors = Vendor.objects.valid_vendors()
     vendors_count = vendors.count()
     context = {
         'vendors': vendors,
@@ -163,12 +163,12 @@ def search(request):
 
     fetch_vendors_by_fooditems = FoodItem.objects.filter(food_title__icontains=keyword, is_available=True) \
         .values_list('vendor', flat=True)
-    vendors = Vendor.objects.is_valid_vendor().filter(Q(id__in=fetch_vendors_by_fooditems) |
+    vendors = Vendor.objects.valid_vendors().filter(Q(id__in=fetch_vendors_by_fooditems) |
                                                       Q(vendor_name__icontains=keyword))
 
     if latitude and longitude and radius:
         pnt = GEOSGeometry("POINT(%s %s)" % (longitude, latitude))
-        vendors = Vendor.objects.is_valid_vendor().filter(Q(id__in=fetch_vendors_by_fooditems) |
+        vendors = Vendor.objects.valid_vendors().filter(Q(id__in=fetch_vendors_by_fooditems) |
                                                        Q(vendor_name__icontains=keyword),
                                                        user_profile__location__distance_lte=(pnt, D(km=radius))
                                                        ).annotate(distance=Distance("user_profile__location", pnt)).order_by("distance")

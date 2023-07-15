@@ -6,7 +6,7 @@ from accounts.utils import send_notification
 
 class VendorQuerySet(models.QuerySet):
 
-    def is_valid_vendor(self):
+    def valid_vendors(self):
         return self.filter(is_approved=True, user__is_active=True)
 
 
