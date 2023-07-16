@@ -10,8 +10,6 @@ def get_cart_counter(request):
             if cart_items:
                 for item in cart_items:
                     cart_count += item.quantity
-            else:
-                cart_count = 0
         except Exception:
             cart_count = 0
     return dict(cart_count=cart_count)
@@ -20,7 +18,6 @@ def get_cart_counter(request):
 def get_cart_amounts(request):
     subtotal = 0
     taxes = 0
-    grand_total = 0
     tax_dict = dict()
     if request.user.is_authenticated:
         cart_items = Cart.objects.filter(user=request.user)
@@ -36,6 +33,6 @@ def get_cart_amounts(request):
             tax_dict.update({tax_type: {str(percentage): tax_amount}})
             taxes += tax_amount
 
-        grand_total = subtotal + taxes
+    grand_total = subtotal + taxes
 
     return dict(subtotal=subtotal, taxes=taxes, grand_total=grand_total, tax_dict=tax_dict)

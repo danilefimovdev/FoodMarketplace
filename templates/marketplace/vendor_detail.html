@@ -117,20 +117,23 @@
 																	</div>
 																	<div class="price-holder">
 																		<span class="price">$ {{food.price}}</span>
-																		<a href="" class="add_to_cart" data-id="{{ food.id }}" data-url="{% url 'add-to-cart' food.id %}"
-																		   style="margin-right: 28px"><i class="icon-plus4 text-color"></i></a>
-																		<label id="qty-{{food.id}}">0</label>
-																		<a href="" class="decrease_cart" data-id="{{ food.id }}" data-url="{% url 'decrease-cart' food.id %}"
-																		   style="margin-right: 28px"><i class="icon-minus3 text-color"></i></a>
+																		{% if user.is_authenticated and user.role == 2 %}
+																			<a href="" class="add_to_cart" data-id="{{ food.id }}" data-url="{% url 'add-to-cart' food.id %}"
+																			   style="margin-right: 28px"><i class="icon-plus4 text-color"></i></a>
+																			<label id="qty-{{food.id}}">0</label>
+																			<a href="" class="decrease_cart" data-id="{{ food.id }}" data-url="{% url 'decrease-cart' food.id %}"
+																			   style="margin-right: 28px"><i class="icon-minus3 text-color"></i></a>
+																		{% endif %}
 																	</div>
 																</li>
 															{% endfor %}
 														</ul>
 													{% endfor %}
-
-													{% for item in cart_items %}
-														<span id="qty-{{item.fooditem.id}}" class="item_qty d-none" data-qty="{{item.quantity}}"> {{item.quantity}} </span>
-													{% endfor %}
+													{% if user.is_authenticated and user.role == 2 %}
+														{% for item in cart_items %}
+															<span id="qty-{{item.fooditem.id}}" class="item_qty d-none" data-qty="{{item.quantity}}"> {{item.quantity}} </span>
+														{% endfor %}
+													{% endif %}
 												</div>
 											</div>
 										</div>

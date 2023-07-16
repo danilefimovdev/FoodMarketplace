@@ -1,11 +1,10 @@
-from datetime import datetime
-
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
 from accounts.services.services import get_user_profile_data
+from food_marketplace.services import get_today_day
 from marketplace.models import Cart
 from marketplace.services.cart_manipulation_services import check_does_fooditem_exist, add_item_to_cart, \
     decrease_cart_item_quantity, check_does_cart_item_exist, delete_cart_item, get_ordered_cart_items_by_user
@@ -24,6 +23,8 @@ def marketplace(request):
 
 
 def vendor_detail(request, vendor_slug):
+
+    context = dict()
     vendor = Vendor.objects.get(vendor_slug=vendor_slug)
     categories = Category.objects.filter(vendor=vendor).prefetch_related(
         Prefetch(
@@ -31,10 +32,10 @@ def vendor_detail(request, vendor_slug):
             queryset=FoodItem.objects.filter(is_available=True)
         )
     )
-    now = datetime.now()
     opening_hours = OpeningHour.objects.filter(vendor=vendor).order_by('day')
-    day = datetime.isoweekday(now)
-    context = dict()
+
+    day = get_today_day()
+    # TODO: fix it when I implement mandatory having full filled 7 days opening hours
     try:
         today = OpeningHour.objects.get_by_vendor_and_day(vendor=vendor, day=day)
         context.update({'today': today})
@@ -42,13 +43,11 @@ def vendor_detail(request, vendor_slug):
         pass
     if request.user.is_authenticated:
         cart_items = Cart.objects.filter(user=request.user)
-    else:
-        cart_items = None
+        context.update({'cart_items': cart_items})
     context.update(
         {
             'vendor': vendor,
             'categories': categories,
-            'cart_items': cart_items,
             'opening_hours': opening_hours,
         }
     )
