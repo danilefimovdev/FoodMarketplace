@@ -9,7 +9,7 @@ from accounts.models import UserProfile
 from marketplace.context_processors import get_cart_counter, get_cart_amounts
 from marketplace.models import Cart
 from marketplace.services.cart_manipulation_services import check_does_fooditem_exist, add_item_to_cart, \
-    decrease_cart_item_quantity, check_does_cart_item_exist
+    decrease_cart_item_quantity, check_does_cart_item_exist, delete_cart_item
 from marketplace.services.search_filtering_service import search_vendors_by_keyword, get_all_valid_vendors, \
     filter_vendors_by_geo_position
 from menu.models import Category, FoodItem
@@ -97,22 +97,10 @@ def decrease_cart(request, food_id):
 def delete_cart(request, cart_id):
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        try:
-            cart = Cart.objects.get(user=request.user, id=cart_id)
-            cart.delete()
-            message = 'Cart item has been deleted!'
-            status = 'Success'
-        except Exception:
-            message = 'Cart item does not exist!'
-            status = 'Failed'
-        finally:
-            return JsonResponse({'status': status,
-                                 'message': message,
-                                 'cart_counter': get_cart_counter(request),
-                                 'cart_amounts': get_cart_amounts(request)})
+        response = delete_cart_item(user_id=request.user.pk, cart_id=cart_id)
     else:
-        return JsonResponse({'status': 'Failed', 'message': 'Invalid request'})
-
+        response = {'status': 'Failed', 'message': 'Invalid request'}
+    return JsonResponse(response)
 
 
 @login_required()
