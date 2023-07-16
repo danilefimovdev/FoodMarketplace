@@ -3,7 +3,7 @@ from typing import Optional
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 
-from accounts.models import User
+from accounts.models import User, UserProfile
 
 
 def _check_user_and_token_matching(user: User, token: str) -> bool:
@@ -30,3 +30,20 @@ def validate_user(uidb64: int, token: str) -> Optional[User]:
             user = None
 
     return user
+
+
+def get_user_profile_data(user_id) -> dict:
+    user = User.objects.get(user=user_id)
+    user_profile = UserProfile.objects.get(user=user_id)
+    user_data = {
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'phone': user.phone_number,
+        'email': user.email,
+        'address': user_profile.address,
+        'country': user_profile.country,
+        'state': user_profile.state,
+        'city': user_profile.city,
+        'pin_code': user_profile.pin_code,
+    }
+    return user_data

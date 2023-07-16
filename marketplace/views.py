@@ -5,11 +5,10 @@ from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
-from accounts.models import UserProfile
-from marketplace.context_processors import get_cart_counter, get_cart_amounts
+from accounts.services.services import get_user_profile_data
 from marketplace.models import Cart
 from marketplace.services.cart_manipulation_services import check_does_fooditem_exist, add_item_to_cart, \
-    decrease_cart_item_quantity, check_does_cart_item_exist, delete_cart_item
+    decrease_cart_item_quantity, check_does_cart_item_exist, delete_cart_item, get_ordered_cart_items_by_user
 from marketplace.services.search_filtering_service import search_vendors_by_keyword, get_all_valid_vendors, \
     filter_vendors_by_geo_position
 from menu.models import Category, FoodItem
@@ -105,10 +104,7 @@ def delete_cart(request, cart_id):
 
 @login_required()
 def cart(request):
-    cart_items = Cart.objects.filter(user=request.user).order_by('created_at')
-    context = {
-        'cart_items': cart_items,
-    }
+    context = get_ordered_cart_items_by_user(request.user.pk)
     return render(request, 'marketplace/cart.html', context)
 
 
@@ -135,22 +131,13 @@ def search(request):
 
 @login_required()
 def checkout(request):
-    cart_items = Cart.objects.filter(user=request.user).order_by('created_at')
+
+    cart_items = get_ordered_cart_items_by_user(request.user.pk)['cart_items']
     cart_count = cart_items.count()
     if cart_count <= 0:
         return redirect('marketplace')
-    user_profile = UserProfile.objects.get(user=request.user)
-    default_values = {
-        'first_name': request.user.first_name,
-        'last_name': request.user.last_name,
-        'phone': request.user.phone_number,
-        'email': request.user.email,
-        'address': user_profile.address,
-        'country': user_profile.country,
-        'state': user_profile.state,
-        'city': user_profile.city,
-        'pin_code': user_profile.pin_code,
-    }
+
+    default_values = get_user_profile_data(request.user.pk)
     form = OrderForm(initial=default_values)
     context = {
         'form': form,
