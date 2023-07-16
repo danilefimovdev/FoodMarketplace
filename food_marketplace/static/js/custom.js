@@ -126,7 +126,7 @@ $(document).ready(function(){
                         response.cart_amounts['grand_total'],
                     );
 
-                    if(window.location.path == '/cart/'){
+                    if(window.location.pathname == '/cart/'){
                         removeCartItem(response.qty, cart_id);
                         checkCartEmpty();
                     }
