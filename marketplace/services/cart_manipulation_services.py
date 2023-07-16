@@ -44,9 +44,9 @@ def _form_response(message: str, qty: int, user_id: int) -> dict:
     response = {
         'status': 'Success',
         'message': message,
-        'cart_counter': get_cart_counter(user_id),
+        'cart_counter': get_cart_counter(user_id=user_id),
         'qty': qty,
-        'cart_amounts': get_cart_amounts(user_id)
+        'cart_amounts': get_cart_amounts(user_id=user_id)
     }
     return response
 
@@ -59,7 +59,15 @@ def check_does_fooditem_exist(food_id: int):
         return {}
 
 
-def _increase_item_quantity(food_id: int, user_id: int):
+def check_does_cart_item_exist(food_id: int, user_id: int):
+    try:
+        cart_item = Cart.objects.get(user=user_id, fooditem=food_id)
+        return {'item_qty': cart_item.quantity}
+    except ObjectDoesNotExist:
+        return {}
+
+
+def _increase_cart_item_quantity(food_id: int, user_id: int):
 
     cart_item = Cart.objects.get(user=user_id, fooditem=food_id)
     # increase cart quantity
@@ -85,9 +93,9 @@ def _add_new_cart_item(food_id, user_id: int, food_title: str):
 def add_item_to_cart(food_id: int, user_id: int, food_title: str) -> dict:
 
     try:
-        result = _increase_item_quantity(food_id, user_id)
+        result = _increase_cart_item_quantity(food_id=food_id, user_id=user_id)
     except ObjectDoesNotExist:
-        result = _add_new_cart_item(food_id, user_id, food_title)
+        result = _add_new_cart_item(food_id=food_id, user_id=user_id, food_title=food_title)
 
     response = _form_response(
         qty=result['qty'],
@@ -96,3 +104,39 @@ def add_item_to_cart(food_id: int, user_id: int, food_title: str) -> dict:
     )
     return response
 
+
+def _decrease_cart_item_qty(user_id: int, food_id: int):
+
+    cart_item = Cart.objects.get(user=user_id, fooditem=food_id)
+    cart_item.quantity -= 1
+    cart_item.save()
+    message = 'Decreased the cart quantity'
+
+    response = dict(message=message, qty=cart_item.quantity)
+    return response
+
+
+def _delete_cart_item(user_id: int, food_id: int):
+
+    cart_item = Cart.objects.get(user=user_id, fooditem=food_id)
+    cart_item.delete()
+    cart_item.quantity = 0
+    message = 'Decreased the cart quantity'
+
+    response = dict(message=message, qty=cart_item.quantity)
+    return response
+
+
+def decrease_cart_item_quantity(user_id: int, food_id: int, qty: int):
+
+    if qty > 1:
+        result = _decrease_cart_item_qty(food_id=food_id, user_id=user_id)
+    else:
+        result = _delete_cart_item(food_id=food_id, user_id=user_id)
+
+    response = _form_response(
+        qty=result['qty'],
+        message=result['message'],
+        user_id=user_id
+    )
+    return response

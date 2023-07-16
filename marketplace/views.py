@@ -8,7 +8,8 @@ from django.shortcuts import render, redirect
 from accounts.models import UserProfile
 from marketplace.context_processors import get_cart_counter, get_cart_amounts
 from marketplace.models import Cart
-from marketplace.services.cart_manipulation_services import check_does_fooditem_exist, add_item_to_cart
+from marketplace.services.cart_manipulation_services import check_does_fooditem_exist, add_item_to_cart, \
+    decrease_cart_item_quantity, check_does_cart_item_exist
 from marketplace.services.search_filtering_service import search_vendors_by_keyword, get_all_valid_vendors, \
     filter_vendors_by_geo_position
 from menu.models import Category, FoodItem
@@ -57,50 +58,61 @@ def vendor_detail(request, vendor_slug):
 
 @login_required()
 def add_to_cart(request, food_id):
+
     # check is it ajax request
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         # check if the food item exists
-        is_existed = check_does_fooditem_exist(food_id)
+        is_existed = check_does_fooditem_exist(food_id=food_id)
         if is_existed:
             response = add_item_to_cart(food_id=food_id, user_id=request.user.pk, food_title=is_existed['title'])
-            print(response)
-            return JsonResponse(response)
         else:
-            return JsonResponse({'status': 'Failed', 'message': 'This food does not exist'})
+            response = {'status': 'Failed', 'message': 'add_item_to_cart: This food does not exist'}
     else:
-        return JsonResponse({'status': 'Failed', 'message': 'Invalid request'})
+        response = {'status': 'Failed', 'message': 'Invalid request'}
+    return JsonResponse(response)
 
 
 @login_required()
 def decrease_cart(request, food_id):
-    if request.user.is_authenticated:
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            # check if the food item exists
-            try:
-                fooditem = FoodItem.objects.get(id=food_id)
-                # check if the user has already added that food to the cart
-                try:
-                    chkCart = Cart.objects.get(user=request.user, fooditem=food_id)
-                    # decrease cart quantity
-                    if chkCart.quantity >= 1:
-                        chkCart.quantity -= 1
-                        chkCart.save()
-                    else:
-                        chkCart.delete()
-                        chkCart.quantity = 0
-                    return JsonResponse({'status': 'Success',
-                                         'message': 'Decreased the cart quantity',
-                                         'cart_counter': get_cart_counter(request),
-                                         'qty': chkCart.quantity,
-                                         'cart_amounts': get_cart_amounts(request)})
-                except Exception:
-                    return JsonResponse({'status': 'Failed', 'message': 'You do not have this item in your cart'})
-            except Exception:
-                return JsonResponse({'status': 'Failed', 'message': 'This food does not exist'})
+
+    # check is it ajax request
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        is_food_existed = check_does_fooditem_exist(food_id=food_id)
+        # check if the food item exists
+        if is_food_existed:
+            is_cart_existed = check_does_cart_item_exist(food_id=food_id, user_id=request.user.pk)
+            # check if the cart item exists
+            if is_cart_existed:
+                response = decrease_cart_item_quantity(food_id=food_id, user_id=request.user.pk, qty=is_cart_existed['item_qty'])
+            else:
+                response = {'status': 'Failed', 'message': 'You do not have this item in your cart'}
         else:
-            return JsonResponse({'status': 'Failed', 'message': 'Invalid request'})
+            response = {'status': 'Failed', 'message': 'add_item_to_cart: This food does not exist'}
     else:
-        return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
+        response = {'status': 'Failed', 'message': 'Invalid request'}
+    return JsonResponse(response)
+
+
+@login_required()
+def delete_cart(request, cart_id):
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        try:
+            cart = Cart.objects.get(user=request.user, id=cart_id)
+            cart.delete()
+            message = 'Cart item has been deleted!'
+            status = 'Success'
+        except Exception:
+            message = 'Cart item does not exist!'
+            status = 'Failed'
+        finally:
+            return JsonResponse({'status': status,
+                                 'message': message,
+                                 'cart_counter': get_cart_counter(request),
+                                 'cart_amounts': get_cart_amounts(request)})
+    else:
+        return JsonResponse({'status': 'Failed', 'message': 'Invalid request'})
+
 
 
 @login_required()
@@ -110,29 +122,6 @@ def cart(request):
         'cart_items': cart_items,
     }
     return render(request, 'marketplace/cart.html', context)
-
-
-@login_required()
-def delete_cart(request, cart_id):
-    if request.user.is_authenticated:
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            try:
-                cart = Cart.objects.get(user=request.user, id=cart_id)
-                cart.delete()
-                message = 'Cart item has been deleted!'
-                status = 'Success'
-            except Exception:
-                message = 'Cart item does not exist!'
-                status = 'Failed'
-            finally:
-                return JsonResponse({'status': status,
-                                     'message': message,
-                                     'cart_counter': get_cart_counter(request),
-                                     'cart_amounts': get_cart_amounts(request)})
-        else:
-            return JsonResponse({'status': 'Failed', 'message': 'Invalid request'})
-    else:
-        return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
 
 
 def search(request):
