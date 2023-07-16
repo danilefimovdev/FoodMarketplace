@@ -1,8 +1,10 @@
 from django.core.exceptions import ObjectDoesNotExist
 
 from accounts.models import User
-from marketplace.models import Cart, Tax
+from marketplace.models import Cart
 from menu.models import FoodItem
+from orders.services.orders_amounts_service import count_cart_items_quantity, calculate_subtotal_of_cart, \
+    get_tax_data_of_cart
 
 
 def add_item_to_cart(food_id: int, user_id: int, food_title: str) -> dict:
@@ -49,35 +51,20 @@ def delete_cart_item(user_id: int, cart_id: int):
     return response
 
 
-def get_cart_counter(user_id: int):
+def _get_cart_counter(user_id: int):
+
     cart_count = 0
-    try:
-        cart_items = Cart.objects.filter(user=user_id)
-        if cart_items:
-            for item in cart_items:
-                cart_count += item.quantity
-    except Exception:
-        cart_count = 0
+    cart_count += count_cart_items_quantity(user_id)
+
     return dict(cart_count=cart_count)
 
 
-def get_cart_amounts(user_id: int):
-    subtotal = 0
-    taxes = 0
-    tax_dict = dict()
-    cart_items = Cart.objects.filter(user=user_id)
-    for item in cart_items:
-        fooditem = FoodItem.objects.get(pk=item.fooditem.id)
-        subtotal += (fooditem.price * item.quantity)
+def _get_cart_amounts(user_id: int):
 
-    get_taxes = Tax.objects.filter(is_active=True)
-    for tax in get_taxes:
-        tax_type = tax.tax_type
-        percentage = tax.tax_percentage
-        tax_amount = round(subtotal * percentage / 100, 2)
-        tax_dict.update({tax_type: {str(percentage): tax_amount}})
-        taxes += tax_amount
-
+    subtotal = calculate_subtotal_of_cart(user_id=user_id)
+    tax_data = get_tax_data_of_cart(subtotal=subtotal)
+    tax_dict = tax_data['tax_dict']
+    taxes = tax_data['taxes']
     grand_total = subtotal + taxes
 
     return dict(subtotal=subtotal, taxes=taxes, grand_total=grand_total, tax_dict=tax_dict)
@@ -117,9 +104,9 @@ def _form_response(message: str, qty: int, user_id: int) -> dict:
     response = {
         'status': 'Success',
         'message': message,
-        'cart_counter': get_cart_counter(user_id=user_id),
+        'cart_counter': _get_cart_counter(user_id=user_id),
         'qty': qty,
-        'cart_amounts': get_cart_amounts(user_id=user_id)
+        'cart_amounts': _get_cart_amounts(user_id=user_id)
     }
     return response
 
