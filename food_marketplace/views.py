@@ -6,9 +6,10 @@ from food_marketplace.utils import get_or_set_current_location
 from vendors.models import Vendor
 
 
+# TODO: use part from search service to get rid of self repeating
 def home(request):
     coordinates = get_or_set_current_location(request)
-    if coordinates is not None:
+    if coordinates:
 
         pnt = GEOSGeometry("POINT(%s %s)" % (coordinates[0], coordinates[1]))
         vendors = Vendor.objects.filter(user_profile__location__distance_lte=(pnt, D(km=100))
@@ -16,7 +17,7 @@ def home(request):
         for vendor in vendors:
             vendor.kms = round(vendor.distance.km, 1)
     else:
-        vendors = Vendor.objects.valid_vendors()[:8]
+        vendors = Vendor.objects.valid_vendors()
     top_vendors = vendors[:3]
-    return render(request, 'home.html', context={'vendors': vendors,
+    return render(request, 'home.html', context={'vendors': vendors[:8],
                                                  'top_vendors': top_vendors})

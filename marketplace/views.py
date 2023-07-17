@@ -1,18 +1,14 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
 from accounts.services.services import get_user_profile_data
-from food_marketplace.services import get_today_day
-from marketplace.models import Cart
 from marketplace.services.cart_manipulation_services import check_does_fooditem_exist, add_item_to_cart, \
     decrease_cart_item_quantity, check_does_cart_item_exist, delete_cart_item, get_ordered_cart_items_by_user
 from marketplace.services.search_filtering_service import search_vendors_by_keyword, get_all_valid_vendors, \
     filter_vendors_by_geo_position
-from menu.models import Category, FoodItem
+from marketplace.services.vendor_detail_service import get_vendor_detail
 from orders.forms import OrderForm
-from vendors.models import Vendor, OpeningHour
 
 
 def marketplace(request):
@@ -24,33 +20,7 @@ def marketplace(request):
 
 def vendor_detail(request, vendor_slug):
 
-    context = dict()
-    vendor = Vendor.objects.get(vendor_slug=vendor_slug)
-    categories = Category.objects.filter(vendor=vendor).prefetch_related(
-        Prefetch(
-            'fooditems',
-            queryset=FoodItem.objects.filter(is_available=True)
-        )
-    )
-    opening_hours = OpeningHour.objects.filter(vendor=vendor).order_by('day')
-
-    day = get_today_day()
-    # TODO: fix it when I implement mandatory having full filled 7 days opening hours
-    try:
-        today = OpeningHour.objects.get_by_vendor_and_day(vendor=vendor, day=day)
-        context.update({'today': today})
-    except Exception:
-        pass
-    if request.user.is_authenticated:
-        cart_items = Cart.objects.filter(user=request.user)
-        context.update({'cart_items': cart_items})
-    context.update(
-        {
-            'vendor': vendor,
-            'categories': categories,
-            'opening_hours': opening_hours,
-        }
-    )
+    context = get_vendor_detail(vendor_slug=vendor_slug, user_id=request.user.pk)
     return render(request, 'marketplace/vendor_detail.html', context)
 
 
