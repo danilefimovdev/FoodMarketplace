@@ -30,6 +30,9 @@ def v_profile(request):
             profile_form.save()
             messages.success(request, 'Profile was updated')
             return redirect('v-profile')
+        else:
+            messages.error(request, 'Invalid data')
+            redirect('v-profile')
     else:
         profile_form = UserProfileForm(instance=user_profile)
         vendor_form = VendorForm(instance=vendor)
@@ -83,6 +86,9 @@ def add_category(request):
             category.save()
             messages.success(request, f'Category "{category_name}" was created.')
             return redirect('menu-builder')
+        else:
+            messages.error(request, 'You entered invalid data in form')
+            return redirect('add-category')
     else:
         form = CategoryForm()
     return render(request, 'vendors/add_category.html', context={'form': form})
@@ -103,7 +109,7 @@ def edit_category(request, pk=None):
             return redirect('menu-builder')
         else:
             messages.error(request, 'You entered invalid data in form')
-            return redirect('edit-category')
+            return redirect('edit-category', pk)
     else:
         context = {'form': CategoryForm(instance=category),
                    'category': category}
@@ -133,6 +139,9 @@ def add_food(request):
             food_item.save()
             messages.success(request, f'Food Item "{food_title}" was created.')
             return redirect('fooditems-by-category', food_item.category.id)
+        else:
+            messages.error(request, 'You entered invalid data in form')
+            return redirect('add-food')
     else:
         form = FoodItemForm()
         form.fields['category'].queryset = Category.objects.filter(vendor=get_vendor(request))

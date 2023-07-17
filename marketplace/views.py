@@ -73,8 +73,8 @@ def delete_cart(request, cart_id):
 
 @login_required()
 def cart(request):
-    context = get_ordered_cart_items_by_user(request.user.pk)
-    return render(request, 'marketplace/cart.html', context)
+    cart_items = get_ordered_cart_items_by_user(request.user.pk)['cart_items']
+    return render(request, 'marketplace/cart.html', context={'cart_items': cart_items})
 
 
 def search(request):
@@ -95,21 +95,20 @@ def search(request):
         context = filter_vendors_by_geo_position(latitude=latitude, longitude=longitude,
                                                  radius=radius, address=address, context=context)
 
-    return render(request, 'marketplace/listings.html', context=context)
+    return render(request, 'marketplace/li stings.html', context=context)
 
 
 @login_required()
 def checkout(request):
 
-    cart_items = get_ordered_cart_items_by_user(request.user.pk)['cart_items']
-    cart_count = cart_items.count()
-    if cart_count <= 0:
+    cart_items = get_ordered_cart_items_by_user(request.user.pk)
+    if cart_items['items_qty'] < 1:
         return redirect('marketplace')
 
-    default_values = get_user_profile_data(request.user.pk)
-    form = OrderForm(initial=default_values)
+    initial_values = get_user_profile_data(request.user.pk)
+    form = OrderForm(initial=initial_values)
     context = {
         'form': form,
-        'cart_items': cart_items,
+        'cart_items': cart_items['cart_items'],
     }
     return render(request, 'marketplace/checkout.html', context)

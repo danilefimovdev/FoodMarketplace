@@ -37,6 +37,9 @@ def register_customer(request):
                 register_new_user(form_data, role=User.CUSTOMER)
                 messages.success(request, 'You have registered successfully. Check your email.')
                 return redirect('home')
+            else:
+                messages.error(request, 'You entered invalid data in form')
+                return redirect('register-user')
         else:
             form = UserForm()
 
@@ -74,6 +77,9 @@ def register_vendor(request):
                 register_new_vendor(u_form_data, v_form_data)
                 messages.success(request, 'You have registered successfully. Check your email and wait for the approval')
                 return redirect('home')
+            else:
+                messages.error(request, 'You entered invalid data in form')
+                return redirect('register-vendor')
         else:
             context = {
                 'u_form': UserForm(),

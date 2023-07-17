@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 
 
@@ -10,9 +9,7 @@ def generate_order_number(pk):
 
 def order_total_by_vendor(order, vendor_id):
     total_data = order.total_data
-    print(total_data)
     data = total_data.get(str(vendor_id))
-    print(data)
     subtotal = 0
     taxes_amount = 0
     tax_dict = {}

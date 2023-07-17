@@ -32,8 +32,8 @@ def validate_user(uidb64: int, token: str) -> Optional[User]:
     return user
 
 
-def get_user_profile_data(user_id) -> dict:
-    user = User.objects.get(user=user_id)
+def get_user_profile_data(user_id: int) -> dict:
+    user = User.objects.get(id=user_id)
     user_profile = UserProfile.objects.get(user=user_id)
     user_data = {
         'first_name': user.first_name,

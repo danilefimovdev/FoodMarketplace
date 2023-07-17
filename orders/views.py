@@ -1,94 +1,55 @@
 import simplejson as json
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
 from accounts.utils import send_notification
-from marketplace.context_processors import get_cart_amounts
-from marketplace.models import Cart, Tax
-from menu.models import FoodItem
+from marketplace.models import Cart
+from marketplace.services.cart_manipulation_services import get_cart_amounts, get_ordered_cart_items_by_user
 from orders.forms import OrderForm
 from orders.models import Order, Payment, OrderedFood
-from orders.utils import generate_order_number, order_total_by_vendor
+from orders.services.order_creation_service import get_vendor_ids_from_cart_items, split_order_data_by_vendor, \
+    create_order_from_form
+from orders.utils import order_total_by_vendor
 
 
-@login_required(login_url='login')
+@login_required()
 def place_order(request):
-    cart_items = Cart.objects.filter(user=request.user).order_by('created_at')
-    cart_count = cart_items.count()
-    if cart_count <= 0:
-        return redirect('marketplace')
 
-    vendors_ids = []
-    for item in cart_items:
-        id_ = item.fooditem.vendor.id
-        if id_ not in vendors_ids:
-            vendors_ids.append(id_)
+    user_id = request.user.pk
+    vendors_id = get_vendor_ids_from_cart_items(user_id=user_id)
 
     # {"vendor_id":{"subtotal":{"tax_type": {"tax_percentage": "tax_amount"}}}}
+    cart_items_id = get_ordered_cart_items_by_user(user_id=user_id, get_ids=True)['cart_items']
+    total_data = split_order_data_by_vendor(vendors_id=vendors_id, cart_items_id=cart_items_id)
 
-    get_taxes = Tax.objects.filter(is_active=True)
-    total_data = {}
-    subtotal_by_vendor = {}
+    cart_data = get_cart_amounts(user_id=user_id)
 
-    for item in cart_items:
-        fooditem = FoodItem.objects.get(pk=item.fooditem.pk)
-        v_id = fooditem.vendor.id
-        item_amount = (fooditem.price * item.quantity)
-        if v_id in subtotal_by_vendor:
-            subtotal = subtotal_by_vendor[v_id]
-            subtotal += item_amount
-            subtotal_by_vendor[v_id] = subtotal
-        else:
-            subtotal_by_vendor[v_id] = item_amount
-
-        tax_dict = {}
-        for tax in get_taxes:
-            tax_type = tax.tax_type
-            percentage = tax.tax_percentage
-            tax_amount = round(subtotal_by_vendor[v_id] * percentage / 100, 2)
-            tax_dict.update({tax_type: {float(percentage): float(tax_amount)}})
-        total_data.update({v_id: {float(subtotal_by_vendor[v_id]): tax_dict}})
-        print(total_data)
-
-    total_tax = get_cart_amounts(request)['taxes']
-    grand_total = get_cart_amounts(request)['grand_total']
-    tax_data = get_cart_amounts(request)['tax_dict']
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
-            order = Order()
-            order.first_name = form.cleaned_data['first_name']
-            order.last_name = form.cleaned_data['last_name']
-            order.phone = form.cleaned_data['phone']
-            order.email = form.cleaned_data['email']
-            order.address = form.cleaned_data['address']
-            order.country = form.cleaned_data['country']
-            order.state = form.cleaned_data['state']
-            order.city = form.cleaned_data['city']
-            order.pin_code = form.cleaned_data['pin_code']
-            order.user = request.user
-            order.total_tax = total_tax
-            order.total = grand_total
-            order.tax_data = json.dumps(tax_data)
-            order.total_data = total_data
-            order.payment_method = request.POST['payment_method']
-            order.save()
-            order.order_number = generate_order_number(request.user.pk)
-            order.vendor.add(*vendors_ids)
-            order.save()
+            payment_method = request.POST['payment_method']
+            order = create_order_from_form(form_data=form.cleaned_data, user_id=user_id, vendors_id=vendors_id,
+                                           total_data=total_data, cart_data=cart_data, payment_method=payment_method)
+            cart_items = Cart.objects.filter(id__in=cart_items_id)
             context = {
                 'order': order,
                 'cart_items': cart_items,
             }
+
             return render(request, 'orders/place_order.html', context)
+        else:
+            messages.error(request, 'You entered invalid data in form')
+            return redirect('place-order')
     else:
         return render(request, 'orders/place_order.html')
 
 
-@login_required(login_url='login')
+@login_required()
 def payments(request):
+
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'POST':
 
         order_number = request.POST.get('order_number')
@@ -171,6 +132,7 @@ def payments(request):
     return HttpResponse('Payments view')
 
 
+@login_required()
 def order_complete(request):
     order_number = request.GET.get('order_no')
     transaction_id = request.GET.get('trans_id')

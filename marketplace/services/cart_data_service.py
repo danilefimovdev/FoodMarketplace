@@ -1,34 +1,32 @@
-from decimal import Decimal
-
 from django.core.exceptions import ObjectDoesNotExist
 
 from marketplace.models import Tax, Cart
 from menu.models import FoodItem
 
 
-def get_tax_data_of_cart(subtotal: Decimal) -> dict:
+def get_tax_data_of_cart(subtotal: float) -> dict:
 
     tax_dict = {}
-    taxes = Decimal('0.00')
+    taxes = 0.00
 
     get_taxes = Tax.objects.filter(is_active=True)
     for tax in get_taxes:
         tax_type = tax.tax_type
         percentage = tax.tax_percentage
-        tax_amount = round(subtotal * percentage / 100, 2)
-        tax_dict.update({tax_type: {str(percentage): tax_amount}})
+        tax_amount = round(subtotal * float(percentage) / 100, 2)
+        tax_dict.update({tax_type: {str(percentage): str(tax_amount)}})
         taxes += tax_amount
 
     return {'tax_dict': tax_dict, 'taxes': taxes}
 
 
-def calculate_subtotal_of_cart(user_id: int) -> Decimal:
+def calculate_subtotal_of_cart(user_id: int) -> float:
 
-    subtotal = Decimal('0.00')
+    subtotal = 0.00
     cart_items = Cart.objects.filter(user=user_id)
     for item in cart_items:
         fooditem = FoodItem.objects.get(pk=item.fooditem.id)
-        subtotal += (fooditem.price * item.quantity)
+        subtotal += round(fooditem.price * item.quantity)
 
     return subtotal
 

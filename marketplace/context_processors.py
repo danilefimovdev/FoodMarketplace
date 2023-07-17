@@ -1,5 +1,5 @@
-from orders.services.orders_amounts_service import calculate_subtotal_of_cart, get_tax_data_of_cart, \
-    count_cart_items_quantity
+from marketplace.services.cart_data_service import count_cart_items_quantity, calculate_subtotal_of_cart, \
+    get_tax_data_of_cart
 
 
 def get_cart_counter(request):

@@ -2,9 +2,9 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from accounts.models import User
 from marketplace.models import Cart
+from marketplace.services.cart_data_service import count_cart_items_quantity, get_tax_data_of_cart, \
+    calculate_subtotal_of_cart
 from menu.models import FoodItem
-from orders.services.orders_amounts_service import count_cart_items_quantity, calculate_subtotal_of_cart, \
-    get_tax_data_of_cart
 
 
 def add_item_to_cart(food_id: int, user_id: int, food_title: str) -> dict:
@@ -59,7 +59,7 @@ def _get_cart_counter(user_id: int):
     return dict(cart_count=cart_count)
 
 
-def _get_cart_amounts(user_id: int):
+def get_cart_amounts(user_id: int):
 
     subtotal = calculate_subtotal_of_cart(user_id=user_id)
     tax_data = get_tax_data_of_cart(subtotal=subtotal)
@@ -67,7 +67,7 @@ def _get_cart_amounts(user_id: int):
     taxes = tax_data['taxes']
     grand_total = subtotal + taxes
 
-    return dict(subtotal=subtotal, taxes=taxes, grand_total=grand_total, tax_dict=tax_dict)
+    return dict(subtotal=str(subtotal), taxes=str(taxes), grand_total=str(grand_total), tax_dict=tax_dict)
 
 
 def check_does_fooditem_exist(food_id: int):
@@ -90,12 +90,21 @@ def check_does_cart_item_exist(food_id: int = None, user_id: int = None, cart_id
         return {}
 
 
-def get_ordered_cart_items_by_user(user_id: int) -> dict:
+def get_ordered_cart_items_by_user(user_id: int, get_ids: bool = False) -> dict:
 
+    response = {}
     cart_items = Cart.objects.filter(user=user_id).order_by('created_at')
-    response = {
-        'cart_items': cart_items,
-    }
+    if get_ids:
+        cart_items_id = []
+        for item in cart_items:
+            cart_items_id.append(item.pk)
+        response.update({'cart_items': cart_items_id})
+        items_qty = len(cart_items_id)
+    else:
+        response.update({'cart_items': cart_items})
+        items_qty = cart_items.count()
+
+    response.update({'items_qty': items_qty})
     return response
 
 
@@ -106,7 +115,7 @@ def _form_response(message: str, qty: int, user_id: int) -> dict:
         'message': message,
         'cart_counter': _get_cart_counter(user_id=user_id),
         'qty': qty,
-        'cart_amounts': _get_cart_amounts(user_id=user_id)
+        'cart_amounts': get_cart_amounts(user_id=user_id)
     }
     return response
 
