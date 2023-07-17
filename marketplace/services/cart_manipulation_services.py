@@ -167,7 +167,7 @@ def _delete_cart_item(user_id: int = None, food_id: int = None, cart_id: int = N
     return response
 
 
+def clean_customer_cart(user_id: int):
 
-
-
+    Cart.objects.filter(user=user_id).delete()
 
