@@ -37,9 +37,6 @@ def register_customer(request):
                 register_new_user(form_data, role=User.CUSTOMER)
                 messages.success(request, 'You have registered successfully. Check your email.')
                 return redirect('home')
-            else:
-                messages.error(request, 'You entered invalid data in form')
-                return redirect('register-user')
         else:
             form = UserForm()
 
@@ -77,9 +74,6 @@ def register_vendor(request):
                 register_new_vendor(u_form_data, v_form_data)
                 messages.success(request, 'You have registered successfully. Check your email and wait for the approval')
                 return redirect('home')
-            else:
-                messages.error(request, 'You entered invalid data in form')
-                return redirect('register-vendor')
         else:
             context = {
                 'u_form': UserForm(),
@@ -140,14 +134,16 @@ def vendor_dashboard(request):
     vendor = Vendor.objects.get(user=request.user)
     orders = Order.objects.filter(vendor__in=[vendor.id], is_ordered=True).order_by('-created_at')
     recent_orders = orders[:10]
-    total_revenue = Order.objects.get_total_revenue(orders)
+    # total_revenue = Order.objects.get_total_revenue(orders)
     current_month_orders = Order.objects.current_month_orders_by_vendor(vendor, datetime.today())
-    month_revenue = Order.objects.get_total_revenue(current_month_orders)
+    # month_revenue = Order.objects.get_total_revenue(current_month_orders)
     context = {
         'orders_count': orders.count(),
         'recent_orders': recent_orders,
-        'total_revenue': total_revenue,
-        'month_revenue': month_revenue,
+        'total_revenue': 0,
+        'month_revenue': 0,
+        # 'total_revenue': total_revenue,
+        # 'month_revenue': month_revenue,
     }
     return render(request, 'accounts/vendor_dashboard.html', context=context)
 

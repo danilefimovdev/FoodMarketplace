@@ -52,5 +52,4 @@ def get_vendor_detail(vendor_slug, user_id):
     response.update(_get_ordered_opening_hours_by_vendor(vendor_slug=vendor_slug))
     if user_id:
         response.update(_get_cart_items_by_user(user_id=user_id))
-
     return response

@@ -40,9 +40,6 @@ def place_order(request):
             }
 
             return render(request, 'orders/place_order.html', context)
-        else:
-            messages.error(request, 'You entered invalid data in form')
-            return redirect('place-order')
     else:
         return render(request, 'orders/place_order.html')
 
@@ -83,7 +80,7 @@ def order_complete(request):
         order = Order.objects.get(order_number=order_number, payment__transaction_id=transaction_id, is_ordered=True)
         ordered_food = OrderedFood.objects.filter(order=order)
         total = order.total
-        subtotal = total - order.total_tax
+        subtotal = round((total - order.total_tax), 2)
         taxes = json.loads(order.tax_data)
         context = {
             'order': order,

@@ -11,6 +11,7 @@ class VendorQuerySet(models.QuerySet):
 
 
 class Vendor(models.Model):
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user')
     user_profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name='user_profile')
     vendor_name = models.CharField(max_length=50, unique=True)

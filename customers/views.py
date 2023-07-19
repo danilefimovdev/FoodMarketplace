@@ -22,9 +22,6 @@ def customer_profile(request):
             user_form.save()
             messages.success(request, 'Profile updated')
             redirect('c-profile')
-        else:
-            messages.error(request, 'Invalid data')
-            redirect('c-profile')
     else:
         profile_form = UserProfileForm(instance=profile)
         user_form = UserInfoForm(instance=request.user)
