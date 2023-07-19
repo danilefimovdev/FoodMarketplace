@@ -1,6 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.db import IntegrityError
 from django.shortcuts import render, get_object_or_404, redirect
 from accounts.forms import UserProfileForm, UserInfoForm
 from accounts.models import UserProfile
@@ -18,13 +19,11 @@ def customer_profile(request):
         profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
         user_form = UserInfoForm(request.POST, instance=request.user)
         if profile_form.is_valid() and user_form.is_valid():
-            profile_form.save()
-            user_form.save()
-            messages.success(request, 'Profile updated')
-            redirect('c-profile')
-        else:
-            messages.error(request, 'Invalid data')
-            redirect('c-profile')
+            try:
+                profile_form.save()
+                user_form.save()
+            except IntegrityError as ex:
+                messages.warning(request, f'Error: {ex} already exists')
     else:
         profile_form = UserProfileForm(instance=profile)
         user_form = UserInfoForm(instance=request.user)

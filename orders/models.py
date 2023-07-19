@@ -90,29 +90,6 @@ class Order(models.Model):
     def order_placed_to(self):
         return ', '.join([str(i) for i in self.vendor.all()])
 
-    def get_data_by_vendor(self) -> dict:
-        vendor = Vendor.objects.get(user=request_object.user)
-        if self.total_data:
-            total_data = self.total_data
-            data = total_data.get(str(vendor.id))
-            subtotal = 0
-            taxes_amount = 0
-            tax_dict = {}
-            for subtotal_, tax_data in data.items():
-                subtotal += float(subtotal_)
-                tax_dict.update(tax_data)
-                for tax in tax_data.values():
-                    for tax_amount in tax.values():
-                        taxes_amount += float(tax_amount)
-            total = subtotal + taxes_amount
-            context = {
-                'subtotal': subtotal,
-                'tax_dict': tax_dict,
-                'total': round(total, 2),
-                'taxes_amount': taxes_amount,
-            }
-            return context
-
     def __str__(self):
         return self.order_number
 

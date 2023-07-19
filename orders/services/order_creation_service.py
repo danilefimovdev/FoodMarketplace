@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+from datetime import datetime
 from typing import List
 
 from accounts.models import User
@@ -9,7 +10,6 @@ from marketplace.services.cart_data_service import get_tax_data_of_cart
 from marketplace.services.cart_manipulation_services import get_ordered_cart_items_by_user
 from menu.models import FoodItem
 from orders.models import Order, Payment, OrderedFood
-from orders.utils import generate_order_number, order_total_by_vendor
 
 
 @dataclass
@@ -30,7 +30,7 @@ class OrderDataRow:
     tax_data: str
     total_data: dict
     payment_method: str
-    order_number: int
+    order_number: str
 
 
 def get_vendor_ids_from_cart_items(user_id: int) -> list:
@@ -45,25 +45,6 @@ def get_vendor_ids_from_cart_items(user_id: int) -> list:
         ids.add(vendor_id)
 
     return list(ids)
-
-
-def _get_subtotal_by_vendor(cart_items_id: List[int]) -> dict:
-
-    subtotal_by_vendor = {}
-
-    for cart_id in cart_items_id:
-        cart_item = Cart.objects.get(id=cart_id)
-        fooditem = FoodItem.objects.get(pk=cart_item.fooditem.pk)
-        vendor_id = fooditem.vendor.id
-        item_amount = float(fooditem.price * cart_item.quantity)
-        if vendor_id in subtotal_by_vendor:
-            subtotal = subtotal_by_vendor[vendor_id]
-            subtotal += item_amount
-            subtotal_by_vendor[vendor_id] = subtotal
-        else:
-            subtotal_by_vendor[vendor_id] = item_amount
-
-    return subtotal_by_vendor
 
 
 def split_order_data_by_vendor(vendors_id: List[int], cart_items_id: List[int]) -> dict:
@@ -101,7 +82,7 @@ def create_order_from_form(form_data: dict, user_id: int, vendors_id: List[int],
     order.payment_method = payment_method
 
     order.save()
-    order.order_number = generate_order_number(user_id)
+    order.order_number = _generate_order_number(user_id)
 
     order.vendor.add(*vendors_id)
 
@@ -204,7 +185,7 @@ def send_order_notification_to_vendors(order_number: str):
         if email not in to_email:
             to_email.append(email)
             ordered_food_to_vendor = OrderedFood.objects.filter(order=order, fooditem__vendor=vendor)
-            order_by_vendor = order_total_by_vendor(order, vendor.pk)
+            order_by_vendor = get_order_data_by_vendor(order_number=order_number, vendor_id=vendor.pk)
             context = {
                 'order': order,
                 'to_email': [email],
@@ -214,4 +195,54 @@ def send_order_notification_to_vendors(order_number: str):
                 'vendor_grand_total': order_by_vendor['total'],
             }
             send_notification(message_subject, email_template, context)
+
+
+def _get_subtotal_by_vendor(cart_items_id: List[int]) -> dict:
+
+    subtotal_by_vendor = {}
+
+    for cart_id in cart_items_id:
+        cart_item = Cart.objects.get(id=cart_id)
+        fooditem = FoodItem.objects.get(pk=cart_item.fooditem.pk)
+        vendor_id = fooditem.vendor.id
+        item_amount = float(fooditem.price * cart_item.quantity)
+        if vendor_id in subtotal_by_vendor:
+            subtotal = subtotal_by_vendor[vendor_id]
+            subtotal += item_amount
+            subtotal_by_vendor[vendor_id] = subtotal
+        else:
+            subtotal_by_vendor[vendor_id] = item_amount
+
+    return subtotal_by_vendor
+
+
+def _generate_order_number(pk):
+    current_datetime = datetime.now().strftime('%Y%m%d%H%M%S')
+    order_number = current_datetime + str(pk)
+    return order_number
+
+
+def get_order_data_by_vendor(order_number: str, vendor_id: int):
+
+    order = Order.objects.get(order_number=order_number)
+    total_data = order.total_data
+    data = total_data.get(str(vendor_id))
+    subtotal = 0
+    taxes_amount = 0
+    tax_dict = {}
+    for subtotal_, tax_data in data.items():
+        subtotal += float(subtotal_)
+        tax_dict.update(tax_data)
+        for tax in tax_data.values():
+            for tax_amount in tax.values():
+                taxes_amount += float(tax_amount)
+    total = subtotal + taxes_amount
+    context = {
+        'subtotal': round(subtotal, 2),
+        'tax_dict': tax_dict,
+        'total': round(total, 2),
+    }
+    return context
+
+
 

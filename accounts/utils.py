@@ -1,9 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
-from django.db.models import QuerySet
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
@@ -59,14 +57,18 @@ def send_notification(message_subject: str, email_template: str, context: dict):
 
 
 def check_role_vendor(user: User):
-    if user.role == 1:
+
+    vendor_role = User.VENDOR
+    if user.role == vendor_role:
         return True
     else:
         raise PermissionError
 
 
 def check_role_customer(user):
-    if user.role == 2:
+
+    customer_role = User.CUSTOMER
+    if user.role == customer_role:
         return True
     else:
         raise PermissionError

@@ -11,6 +11,7 @@ class VendorQuerySet(models.QuerySet):
 
 
 class Vendor(models.Model):
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user')
     user_profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name='user_profile')
     vendor_name = models.CharField(max_length=50, unique=True)
@@ -86,6 +87,7 @@ class OpeningHourQuerySet(models.QuerySet):
 
 
 class OpeningHour(models.Model):
+
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     day = models.IntegerField(choices=DAYS)
     from_hour = models.CharField(choices=HOUR_OF_DAY_24, max_length=10, blank=True)

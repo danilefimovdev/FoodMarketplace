@@ -6,17 +6,17 @@ urlpatterns = [
     path('', account_views.vendor_dashboard, name='vendor'),
     path('profile/', views.v_profile, name='v-profile'),
     path('menu-builder/', views.menu_builder, name='menu-builder'),
-    path('menu-builder/categories/<int:pk>', views.fooditems_by_category, name='fooditems-by-category'),
+    path('menu-builder/categories/<str:slug>', views.fooditems_by_category, name='fooditems-by-category'),
 
     # Category CRUD
     path('menu-builder/category/add/', views.add_category, name='add-category'),
-    path('menu-builder/category/edit/<int:pk>', views.edit_category, name='edit-category'),
-    path('menu-builder/category/delete/<int:pk>', views.delete_category, name='delete-category'),
+    path('menu-builder/category/edit/<str:slug>', views.edit_category, name='edit-category'),
+    path('menu-builder/category/delete/<str:slug>', views.delete_category, name='delete-category'),
 
     # Food CRUD
     path('menu-builder/food/add/', views.add_food, name='add-food'),
-    path('menu-builder/food/edit/<int:pk>', views.edit_food, name='edit-food'),
-    path('menu-builder/food/delete/<int:pk>', views.delete_food, name='delete-food'),
+    path('menu-builder/food/edit/<str:slug>', views.edit_food, name='edit-food'),
+    path('menu-builder/food/delete/<str:slug>', views.delete_food, name='delete-food'),
 
     # Opening Hour CRUD
     path('opening-hours/', views.opening_hours, name='opening_hours'),
