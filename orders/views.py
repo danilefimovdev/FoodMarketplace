@@ -1,5 +1,4 @@
 import simplejson as json
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse, JsonResponse

@@ -87,6 +87,7 @@ class OpeningHourQuerySet(models.QuerySet):
 
 
 class OpeningHour(models.Model):
+
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     day = models.IntegerField(choices=DAYS)
     from_hour = models.CharField(choices=HOUR_OF_DAY_24, max_length=10, blank=True)

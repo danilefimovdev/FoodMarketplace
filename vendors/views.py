@@ -16,6 +16,7 @@ from vendors.models import Vendor, OpeningHour
 from vendors.services.category_manipulation_service import create_or_update_category
 from vendors.services.fooditem_manipulation_service import create_or_update_fooditem
 from vendors.services.opening_hour_manipulation_service import add_new_opening_hour
+from vendors.services.vendor_profile_manipulation_service import edit_vendor
 from vendors.utils import get_vendor_from_request
 
 
@@ -30,10 +31,12 @@ def v_profile(request):
         vendor_form = VendorForm(request.POST, request.FILES, instance=vendor)
         profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
         if vendor_form.is_valid() and profile_form.is_valid():
-            vendor_form.save()
-            profile_form.save()
-            messages.success(request, 'Profile was updated')
-            return redirect('v-profile')
+            try:
+                edit_vendor(vendor_form_data=vendor_form.cleaned_data, vendor_id=vendor.pk)
+                profile_form.save()
+                return redirect('v-profile')
+            except IntegrityError:
+                messages.warning(request, 'Vendor with the entered "Restaurant name" already exists')
     else:
         profile_form = UserProfileForm(instance=user_profile)
         vendor_form = VendorForm(instance=vendor)
