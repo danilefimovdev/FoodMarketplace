@@ -1,7 +1,7 @@
 from vendors.models import Vendor, OpeningHour
 
 
-def _create_opening_hour(vendor_id: int, day: str, from_hour: str, to_hour: str, is_closed: str) -> int:
+def _create_opening_hour(vendor_id: int, day: str, from_hour: str = None, to_hour: str = None, is_closed: str = None) -> int:
 
     vendor = Vendor.objects.get(pk=vendor_id)
     hour = OpeningHour.objects.create(
@@ -9,7 +9,7 @@ def _create_opening_hour(vendor_id: int, day: str, from_hour: str, to_hour: str,
         day=day,
         from_hour=from_hour,
         to_hour=to_hour,
-        is_closed=is_closed
+        is_closed=bool(is_closed)
     )
     return hour.pk
 
@@ -27,3 +27,14 @@ def add_new_opening_hour(vendor_id: int, day: str, from_hour: str, to_hour: str,
     else:
         response.update({'from_hour': day.from_hour, 'to_hour': day.to_hour})
     return response
+
+
+def set_default_opening_hours(vendor_id: int):
+    vendor = Vendor.objects.get(pk=vendor_id)
+    for day in range(1, 8):
+        OpeningHour.objects.create(
+            vendor=vendor,
+            day=day,
+            is_closed=True
+        )
+

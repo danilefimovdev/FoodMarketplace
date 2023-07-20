@@ -32,10 +32,11 @@ class Vendor(models.Model):
         today = datetime.isoweekday(now)
         current_opening_hours = OpeningHour.objects.get_by_vendor_and_day(self, today)
 
-        current_time = now.strftime("%H:%M:%S")
+        current_time = now.strftime("%H:%M")
+
         if not current_opening_hours.is_closed:
-            start = str(datetime.strptime(current_opening_hours.from_hour, "%I:%M %p").time())
-            end = str(datetime.strptime(current_opening_hours.to_hour, "%I:%M %p").time())
+            start = str(datetime.strptime(current_opening_hours.from_hour, "%H:%M").time())
+            end = str(datetime.strptime(current_opening_hours.to_hour, "%H:%M").time())
             if end > current_time > start:
                 is_open = True
             else:
@@ -77,7 +78,7 @@ DAYS = [
 ]
 
 
-HOUR_OF_DAY_24 = [(time(h, m).strftime('%I:%M %p'), time(h, m).strftime('%I:%M %p')) for h in range(0, 24) for m in (0, 30)]
+HOUR_OF_DAY_24 = [(time(h, m).strftime('%H:%M'), time(h, m).strftime('%H:%M')) for h in range(0, 24) for m in (0, 30)]
 
 
 class OpeningHourQuerySet(models.QuerySet):
@@ -90,8 +91,8 @@ class OpeningHour(models.Model):
 
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     day = models.IntegerField(choices=DAYS)
-    from_hour = models.CharField(choices=HOUR_OF_DAY_24, max_length=10, blank=True)
-    to_hour = models.CharField(choices=HOUR_OF_DAY_24, max_length=10, blank=True)
+    from_hour = models.CharField(choices=HOUR_OF_DAY_24, max_length=10, blank=True, null=True)
+    to_hour = models.CharField(choices=HOUR_OF_DAY_24, max_length=10, blank=True, null=True)
     is_closed = models.BooleanField(default=False)
 
     objects = OpeningHourQuerySet().as_manager()

@@ -75,11 +75,14 @@ def register_vendor(request):
                 messages.success(request, 'You have registered successfully. Check your email and wait for the approval')
                 return redirect('home')
         else:
-            context = {
-                'u_form': UserForm(),
-                'v_form': VendorForm(),
-            }
-            return render(request, 'accounts/register_vendor.html', context=context)
+            u_form = UserForm()
+            v_form = VendorForm()
+
+        context = {
+            'u_form': u_form,
+            'v_form': v_form
+        }
+        return render(request, 'accounts/register_vendor.html', context=context)
     else:
         return redirect_
 
