@@ -1,7 +1,8 @@
-from django.utils.text import slugify
+# from django.utils.text import slugify
 
 from menu.models import FoodItem
 from vendors.models import Vendor
+from pytils.translit import slugify
 
 
 def create_or_update_fooditem(vendor_id: int, form_data: dict, slug: str = None) -> str:

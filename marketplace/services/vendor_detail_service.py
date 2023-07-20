@@ -23,9 +23,6 @@ def _get_categories_of_available_fooditems(vendor_slug: str):
             queryset=FoodItem.objects.filter(is_available=True)
         )
     )
-    # Category.objects.filter(vendor__vendor_slug=vendor_slug).exclude()
-    # for cat in categories:
-    #     foods_number = FoodItem.objects.filter(category=cat, is_available=True).count()
 
     return {'categories': categories}
 
