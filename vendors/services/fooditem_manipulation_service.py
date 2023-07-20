@@ -20,6 +20,7 @@ def create_or_update_fooditem(vendor_id: int, form_data: dict, slug: str = None)
     fooditem.image = form_data['image']
     fooditem.vendor = vendor
     fooditem.is_available = form_data['is_available']
+    print(fooditem.is_available, 'fooditem.is_available')
     fooditem.slug = slugify(form_data['food_title']) + '-' + str(vendor_id)
     fooditem.save()
 

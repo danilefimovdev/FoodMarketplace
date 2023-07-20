@@ -9,6 +9,7 @@ from accounts.models import User
 from accounts.services import send_reset_password_email, set_new_password, validate_user, register_new_user, \
     activate_user_account, UserRegistrationDataRow, VendorRegistrationDataRow, register_new_vendor
 from accounts.utils import detect_user_role, redirect_if_authorized
+from marketplace.services.vendor_detail_service import check_if_vendor_could_be_listed
 from orders.models import Order
 from vendors.forms import VendorForm
 from vendors.models import Vendor
@@ -138,16 +139,20 @@ def vendor_dashboard(request):
     orders = Order.objects.filter(vendor__in=[vendor.id], is_ordered=True).order_by('-created_at')
     recent_orders = orders[:10]
     # total_revenue = Order.objects.get_total_revenue(orders)
-    current_month_orders = Order.objects.current_month_orders_by_vendor(vendor, datetime.today())
+    # current_month_orders = Order.objects.current_month_orders_by_vendor(vendor, datetime.today())
     # month_revenue = Order.objects.get_total_revenue(current_month_orders)
     context = {
         'orders_count': orders.count(),
         'recent_orders': recent_orders,
         'total_revenue': 0,
-        'month_revenue': 0,
+        'month_revenue': 0
         # 'total_revenue': total_revenue,
         # 'month_revenue': month_revenue,
     }
+    warnings = check_if_vendor_could_be_listed(vendor_id=vendor.id)
+    if warnings:
+        context.update({'warnings': warnings})
+
     return render(request, 'accounts/vendor_dashboard.html', context=context)
 
 

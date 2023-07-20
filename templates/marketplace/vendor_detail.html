@@ -28,7 +28,7 @@
 											</figure>
 										</div>
 										<div class="text-holder">
-											<span class="restaurant-title">{{vendor.vendor_name}} {% if vendor.is_opened %}[Open]{% else %}[Closed]{% endif %}</span>
+											<span class="restaurant-title">{{vendor.vendor_name}} </span>
 											<div class="text">
 												<i class="icon-local_pizza"></i>
 												{% if vendor.user_profile.address %}
@@ -87,7 +87,9 @@
 										<h6><i class="icon-restaurant_menu"></i>Categories</h6>
 										<ul class="menu-list">
 											{% for category in categories %}
-												<li><a href="#" class="menu-category-link"> {{category.category_name}} </a></li>
+												{% if category.fooditems.all.count %}
+													<li><a href="#" class="menu-category-link"> {{category.category_name}} </a></li>
+												{% endif %}
 											{% endfor %}
 										</ul>
 									</div>
@@ -103,31 +105,34 @@
 											<div class="menu-itam-holder">
 												<div id="menu-item-list-6272" class="menu-itam-list">
 													{% for category in categories %}
-														<div class="element-title" id="menu-category-2">
-															<h5 class="text-color">{{category}}</h5>
-															<span>{{category.description}}</span>
-														</div>
-														<ul>
-															{% for food in category.fooditems.all %}
-																<li>
-																	<div class="image-holder"><img style="border-radius: 10px;" src="{{ food.image.url }}" alt=""></div>
-																	<div class="text-holder">
-																		<h6>{{food.food_title}}</h6>
-																		<span>{{food.description}}</span>
-																	</div>
-																	<div class="price-holder">
-																		<span class="price">$ {{food.price}}</span>
-																		{% if user.is_authenticated and user.role == 2 %}
-																			<a href="" class="add_to_cart" data-id="{{ food.id }}" data-url="{% url 'add-to-cart' food.id %}"
-																			   style="margin-right: 28px"><i class="icon-plus4 text-color"></i></a>
-																			<label id="qty-{{food.id}}">0</label>
-																			<a href="" class="decrease_cart" data-id="{{ food.id }}" data-url="{% url 'decrease-cart' food.id %}"
-																			   style="margin-right: 28px"><i class="icon-minus3 text-color"></i></a>
-																		{% endif %}
-																	</div>
-																</li>
-															{% endfor %}
-														</ul>
+														{% if category.fooditems.all %}
+															<div class="element-title" id="menu-category-2">
+																<h5 class="text-color">{{category}}</h5>
+																<span>{{category.description}}</span>
+															</div>
+															<ul>
+
+																{% for food in category.fooditems.all %}
+																	<li>
+																		<div class="image-holder"><img style="border-radius: 10px;" src="{{ food.image.url }}" alt=""></div>
+																		<div class="text-holder">
+																			<h6>{{food.food_title}}</h6>
+																			<span>{{food.description}}</span>
+																		</div>
+																		<div class="price-holder">
+																			<span class="price">$ {{food.price}}</span>
+																			{% if user.is_authenticated and user.role == 2 %}
+																				<a href="" class="add_to_cart" data-id="{{ food.id }}" data-url="{% url 'add-to-cart' food.id %}"
+																				   style="margin-right: 28px"><i class="icon-plus4 text-color"></i></a>
+																				<label id="qty-{{food.id}}">0</label>
+																				<a href="" class="decrease_cart" data-id="{{ food.id }}" data-url="{% url 'decrease-cart' food.id %}"
+																				   style="margin-right: 28px"><i class="icon-minus3 text-color"></i></a>
+																			{% endif %}
+																		</div>
+																	</li>
+																{% endfor %}
+															</ul>
+														{% endif %}
 													{% endfor %}
 													{% if user.is_authenticated and user.role == 2 %}
 														{% for item in cart_items %}

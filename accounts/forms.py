@@ -27,10 +27,14 @@ class UserProfileForm(forms.ModelForm):
                                       validators=[allow_only_images_validator])
     cover_photo = forms.FileField(widget=forms.FileInput({'class': 'btn btn-info'}),
                                   validators=[allow_only_images_validator])
-    latitude = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    longitude = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    # uncomment if google services work
+    # latitude = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    # longitude = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    # address = forms.CharField(widget=forms.TextInput(attrs={
+    #     'placeholder': 'Start typing....', 'required': 'required',
+    # }))
     address = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': 'Start typing....', 'required': 'required',
+        'placeholder': 'Start typing....',
     }))
 
     class Meta:
