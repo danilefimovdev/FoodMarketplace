@@ -48,7 +48,7 @@
           <td>Payment method: {{ order.payment_method }}</td>
       </tr>
       <tr>
-          <td>Transaction ID: {{ order.payment  }}</td>
+          <td>Transaction ID: {{ order.transaction_id }}</td>
       </tr>
   </table>
 
@@ -61,12 +61,11 @@
              <th>Price</th>
          </tr>
 
-         {% for item in ordered_food %}
+         {% for food_title, food_data in ordered_food.items %}
             <tr>
-                <td><img src="http://{{domain}}{{ item.fooditem.image.url }}" alt="Food image" width="60"></td>
-                <td><p style="margin: 0;">{{ item.fooditem }}</p></td>
-                <td>{{ item.quantity }} psc</td>
-                <td>$ {{ item.price }}</td>
+                <td><img src="http://{{domain}}{{ food_data.url }}" alt="Food image" width="60"></td>
+                <td><p style="margin: 0;">{{ food_title }}</p></td><td>{{ food_data.quantity. }} psc</td>
+                <td>$ {{ food_data.price }}</td>
             </tr>
          {% endfor %}
       </tbody>

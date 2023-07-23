@@ -5,9 +5,9 @@ from django.template.defaultfilters import slugify
 
 from accounts.models import User, UserProfile
 from accounts.services.services import validate_user
-from accounts.utils import send_email
 from vendors.models import Vendor
 from vendors.services.opening_hour_manipulation_service import set_default_opening_hours
+from accounts.services.tasks import send_email_task
 
 
 @dataclass
@@ -70,10 +70,9 @@ def _create_user_with_data_from_form(data: UserRegistrationDataRow, role: User.R
 def _send_verification_email(user_id: int) -> None:
     """Send verification email to activate account"""
 
-    user = User.objects.get(id=user_id)
     text_message = 'Activate Your Account'
     template = 'accounts/email/account_verification_email.html'
-    send_email(user, template, text_message)
+    send_email_task.delay(user_id, template, text_message)
 
 
 def _set_user_status_active(user: User) -> None:

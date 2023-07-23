@@ -1,7 +1,7 @@
 from typing import Optional
 
 from accounts.models import User
-from accounts.utils import send_email
+from .tasks import send_email_task
 
 
 def _get_user_from_email(email: str) -> Optional[User]:
@@ -13,12 +13,12 @@ def _get_user_from_email(email: str) -> Optional[User]:
     return user
 
 
-def _send_email(user: User) -> None:
+def _send_reset_email(user_pk: int) -> None:
     """Send verification email to activate account"""
 
     subject = 'Reset Your Password'
     template = 'accounts/email/reset_password_email.html'
-    send_email(user, template, subject)
+    send_email_task.delay(user_pk, template, subject)
 
 
 def send_reset_password_email(email: str) -> bool:
@@ -26,7 +26,7 @@ def send_reset_password_email(email: str) -> bool:
     success = False
     user = _get_user_from_email(email)
     if user:
-        _send_email(user)
+        _send_reset_email(user.pk)
         success = True
 
     return success

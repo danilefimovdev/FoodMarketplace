@@ -32,10 +32,12 @@ def detect_user_role(user: User):
     return redirect_url
 
 
-def send_email(user: User, email_template: str, message_subject: str):
+def send_email(user_pk: int, email_template: str, message_subject: str):
+
+    user = User.objects.get(pk=user_pk)
     current_site = settings.DOMAIN
     message = render_to_string(email_template, {
-        'user': user,
+        'user_name': user.first_name,
         'domain': current_site,
         'uid': urlsafe_base64_encode(force_bytes(user.pk)),
         'token': default_token_generator.make_token(user),

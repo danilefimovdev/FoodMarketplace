@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List
 
 from accounts.models import User
-from accounts.utils import send_notification
+from accounts.services.tasks import send_notification_task
 from marketplace.models import Cart
 from marketplace.services.cart_data_service import get_tax_data_of_cart
 from marketplace.services.cart_manipulation_services import get_ordered_cart_items_by_user
@@ -150,25 +150,44 @@ def create_ordered_food_item(order_number: str, payment_id: int, user_id: int) -
     return subtotal
 
 
-def send_order_notification_to_customer(order_number: str, user_id: int, domain: str, customer_subtotal: float):
+def send_order_notification_to_customer(order_number: str, domain: str):
 
     message_subject = 'Thank you for ordering with us!'
     email_template = 'orders/email/order_confirmation_email.html'
 
     order = Order.objects.get(order_number=order_number)
-    ordered_food = OrderedFood.objects.filter(order=order)
+
+    ordered_food_to_customer = OrderedFood.objects.filter(order=order)
+    ordered_food = {}
+    for food in ordered_food_to_customer:
+        ordered_food.update({
+            food.fooditem.food_title: {
+                'image_url': food.fooditem.image.url,
+                'quantity': food.quantity,
+                'price': food.price,
+            }
+        })
+
     tax_data = json.loads(order.tax_data)
+    subtotal = round((order.total - order.total_tax), 2)
+    order_data = {
+        'created_at': order.created_at,
+        'order_number': order.order_number,
+        'payment_method': order.payment_method,
+        'transaction_id': order.payment.transaction_id,
+        'total': order.total,
+        'subtotal': subtotal
+    }
 
     context = {
-        'user': user_id,
-        'order': order,
+        'order': order_data,
         'to_email': [order.email],
         'ordered_food': ordered_food,
         'domain': domain,
-        'subtotal': customer_subtotal,
         'tax_data': tax_data
     }
-    send_notification(message_subject, email_template, context)
+
+    send_notification_task.delay(message_subject, email_template, context)
 
 
 def send_order_notification_to_vendors(order_number: str):
@@ -185,16 +204,32 @@ def send_order_notification_to_vendors(order_number: str):
         if email not in to_email:
             to_email.append(email)
             ordered_food_to_vendor = OrderedFood.objects.filter(order=order, fooditem__vendor=vendor)
+            ordered_food = {}
+            for food in ordered_food_to_vendor:
+                ordered_food.update({
+                    food.fooditem.food_title: {
+                        'image_url': food.fooditem.image.url,
+                        'quantity': food.quantity,
+                        'price': food.price,
+                    }
+                })
             order_by_vendor = get_order_data_by_vendor(order_number=order_number, vendor_id=vendor.pk)
+            order_data = {
+                    'created_at': order.created_at,
+                    'order_number': order.order_number,
+                    'payment_method': order.payment_method,
+                    'transaction_id': order.payment.transaction_id
+                }
             context = {
-                'order': order,
+                'order': order_data,
                 'to_email': [email],
-                'ordered_food': ordered_food_to_vendor,
+                'ordered_food': ordered_food,
                 'vendor_subtotal': order_by_vendor['subtotal'],
                 'tax_data': order_by_vendor['tax_dict'],
                 'vendor_grand_total': order_by_vendor['total'],
             }
-            send_notification(message_subject, email_template, context)
+
+            send_notification_task.delay(message_subject, email_template, context)
 
 
 def _get_subtotal_by_vendor(cart_items_id: List[int]) -> dict:

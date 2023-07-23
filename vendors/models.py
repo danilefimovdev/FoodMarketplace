@@ -64,7 +64,7 @@ class Vendor(models.Model):
                     message_subject = 'We are sorry! You are not eligible for ' \
                                    'publishing your food menu on our marketplace.'
 
-                send_notification(message_subject, email_template, context)
+                # send_notification(message_subject, email_template, context)
         return super(Vendor, self).save()
 
 

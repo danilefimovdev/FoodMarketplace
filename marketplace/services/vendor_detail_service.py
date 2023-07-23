@@ -119,12 +119,23 @@ def _has_vendor_filled_profile(user_id: int) -> list:
     return response
 
 
+def _is_vendor_approved_by_admin(vendor_id: int):
+
+    vendor = Vendor.objects.get(pk=vendor_id)
+    if vendor.is_approved:
+        response = []
+    else:
+        response = [{'message': f'You are not approved by admin'}]
+    return response
+
+
 def check_if_vendor_could_be_listed(vendor_id: int) -> Optional[list]:
 
     warnings = []
 
     vendor = Vendor.objects.get(id=vendor_id)
 
+    warnings.extend(_is_vendor_approved_by_admin(vendor_id=vendor_id))
     warnings.extend(_has_vendor_had_seven_days(vendor_id=vendor_id))
     warnings.extend(_does_vendor_has_working_day(vendor_id=vendor_id))
     warnings.extend(_does_vendor_has_category(vendor_id=vendor_id))
