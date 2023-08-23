@@ -5,29 +5,38 @@ from ..models import User
 from ..utils import send_notification, send_email
 
 
-@shared_task
-def send_email_task(user_pk: int, email_template: str, message_subject: str):
-
-    return send_email(user_pk, email_template, message_subject)
-
-
-@shared_task
-def send_notification_task(message_subject: str, email_template: str, context: dict):
-
-    return send_notification(message_subject, email_template, context)
+@shared_task(bind=True, max_retries=3)
+def send_email_task(self, user_pk: int, email_template: str, message_subject: str):
+    try:
+        send_email(user_pk, email_template, message_subject)
+        return 'Success'
+    except Exception:
+        self.retry(countdown=3)
 
 
-@shared_task
-def send_recommendation_to_subscribed_customers():
+@shared_task(bind=True, max_retries=3)
+def send_notification_task(self, message_subject: str, email_template: str, context: dict):
+    try:
+        send_notification(message_subject, email_template, context)
+        return 'Success'
+    except Exception:
+        self.retry(countdown=3)
+
+
+@shared_task(bind=True, max_retries=3)
+def send_recommendation_to_subscribed_customers(self):
 
     message_subject = 'Check out today restaurant recommendation'
     email_template = 'customers/email/dishes_recommendation.html'
+    try:
+        subscribed = User.objects.filter(is_subscribed=True, is_active=True)
+        to_email = [user_.email for user_ in subscribed]
 
-    subscribed = User.objects.filter(is_subscribed=True, is_active=True)
-    to_email = [user_.email for user_ in subscribed]
-
-    fooditems = get_random_fooditems_data()
-    context = {'to_email': to_email, 'fooditems': fooditems}
-    send_notification(message_subject, email_template=email_template, context=context)
+        fooditems = get_random_fooditems_data()
+        context = {'to_email': to_email, 'fooditems': fooditems}
+        send_notification(message_subject, email_template=email_template, context=context)
+        return 'Success'
+    except Exception:
+        self.retry(countdown=3)
 
 
