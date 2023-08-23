@@ -1,5 +1,5 @@
 from accounts.models import User
-from .tasks import send_email_task
+from mailings.tasks import send_email_task
 
 
 def _send_reset_email(user_pk: int) -> None:

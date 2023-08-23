@@ -11,4 +11,3 @@ def edit_vendor(vendor_form_data: dict, vendor_id: int):
     vendor.vendor_license = vendor_form_data['vendor_license']
     vendor.vendor_slug = slugify(vendor_form_data['vendor_name'])
     vendor.save()
-

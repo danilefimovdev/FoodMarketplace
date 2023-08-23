@@ -7,7 +7,8 @@ from accounts.models import User, UserProfile
 from accounts.services.services import validate_user
 from vendors.models import Vendor
 from vendors.services.opening_hour_manipulation_service import set_default_opening_hours
-from accounts.services.tasks import send_email_task
+
+from mailings.tasks import send_email_task
 
 
 @dataclass

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List
 
 from accounts.models import User
-from accounts.services.tasks import send_notification_task
+from mailings.tasks import send_notification_task
 from marketplace.models import Cart
 from marketplace.services.cart_data_service import get_tax_data_of_cart
 from marketplace.services.cart_manipulation_services import get_ordered_cart_items_by_user

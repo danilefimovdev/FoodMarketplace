@@ -29,7 +29,7 @@ def add_new_opening_hour(vendor_id: int, day: int, from_hour: str, to_hour: str,
     return response
 
 
-def set_default_opening_hours(vendor_id: int):
+def set_default_opening_hours(vendor_id: int) -> None:
 
     vendor = Vendor.objects.get(pk=vendor_id)
     for day in range(1, 8):

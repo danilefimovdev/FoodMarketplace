@@ -1,6 +1,6 @@
 from . import validate_user
-from .tasks import send_email_task
 from ..models import User
+from mailings.tasks import send_email_task
 
 
 def send_activate_subscription_email(email: str) -> bool:

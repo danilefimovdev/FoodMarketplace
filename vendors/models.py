@@ -1,6 +1,7 @@
 from datetime import time, datetime
 from django.db import models
 from accounts.models import UserProfile, User
+from vendors.services.service import notify_vendor_of_status_change
 
 
 class VendorQuerySet(models.QuerySet):
@@ -48,22 +49,10 @@ class Vendor(models.Model):
     def save(self, *args, **kwargs):
         if self.pk is not None:
             # Update
-            orig = Vendor.objects.get(pk=self.pk)
-            if orig.is_approved != self.is_approved:
-                email_template = 'accounts/email/admin_approval_email.html'
-                context = {
-                    'user': self.user,
-                    'to_email': [self.user.email],
-                    'is_approved': self.is_approved
-                }
-
-                if self.is_approved is True:
-                    message_subject = 'Congratulations! Your restaurant has been approved.'
-                else:
-                    message_subject = 'We are sorry! You are not eligible for ' \
-                                   'publishing your food menu on our marketplace.'
-
-                # send_notification(message_subject, email_template, context)
+            vendor = Vendor.objects.get(pk=self.pk)
+            status_changed = True if self.is_approved != vendor.is_approved else False
+            notify_vendor_of_status_change(approve_state=bool(self.is_approved), email=vendor.user.email,
+                                           first_name=vendor.user.first_name, status_changed=status_changed)
         return super(Vendor, self).save()
 
 

@@ -1,5 +1,3 @@
-# from django.utils.text import slugify
-
 from menu.models import FoodItem
 from vendors.models import Vendor
 from pytils.translit import slugify

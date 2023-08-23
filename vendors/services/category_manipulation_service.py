@@ -1,5 +1,3 @@
-# from django.utils.text import slugify
-
 from pytils.translit import slugify
 from menu.models import Category
 from vendors.models import Vendor
