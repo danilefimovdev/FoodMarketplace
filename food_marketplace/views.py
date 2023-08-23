@@ -2,6 +2,7 @@ from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.measure import D
 from django.shortcuts import render
+
 from food_marketplace.utils import get_or_set_current_location
 from vendors.models import Vendor
 

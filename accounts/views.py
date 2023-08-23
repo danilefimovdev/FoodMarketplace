@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages, auth
 
@@ -6,6 +7,7 @@ from accounts.forms import UserForm
 from accounts.models import User
 from accounts.services import send_reset_password_email, set_new_password, validate_user, register_new_user, \
     activate_user_account, UserRegistrationDataRow, VendorRegistrationDataRow, register_new_vendor
+from accounts.services.user_subscription_service import send_activate_subscription_email, activate_subscription
 from accounts.utils import detect_user_role, redirect_if_authorized
 from marketplace.services.vendor_detail_service import check_if_vendor_could_be_listed
 from orders.models import Order
@@ -230,3 +232,30 @@ def reset_password(request):
             return redirect('reset-password')
 
     return render(request, 'accounts/reset_password.html')
+
+
+@login_required()
+def subscribe_to_recommendations_mailing_list(request):
+    """send activate subscription email"""
+
+    if request.method == 'POST':
+        email = request.POST['email']
+        is_sent = send_activate_subscription_email(email)
+        if is_sent:
+            messages.success(request, 'Subscription activate link has been sent to the entered email address')
+        else:
+            messages.warning(request, 'Account does not exist')
+    return redirect('home')
+
+
+def confirm_subscription(request, uidb64, token):
+    """Activate subscription"""
+
+    subscribed = activate_subscription(uidb64, token)
+
+    if subscribed:
+        messages.success(request, 'You have subscribed!')
+    else:
+        messages.error(request, 'Invalid activation link')
+
+    return redirect('home')

@@ -37,6 +37,18 @@ def activate_user_account(uidb64: int, token: str) -> bool:
     return success
 
 
+def subscribe_user_account(uidb64: int, token: str) -> bool:
+    """set user status active if verification was successful"""
+
+    success = False
+    validated_user = validate_user(uidb64, token)
+    if validated_user:
+        _set_user_status_active(validated_user)
+        success = True
+
+    return success
+
+
 def register_new_vendor(user_form_data: UserRegistrationDataRow, vendor_form_data: VendorRegistrationDataRow) -> None:
     """Register new vendor"""
 

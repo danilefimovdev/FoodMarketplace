@@ -47,3 +47,12 @@ def get_user_profile_data(user_id: int) -> dict:
         'pin_code': user_profile.pin_code,
     }
     return user_data
+
+
+def get_user_from_email(email: str) -> Optional[User]:
+
+    if User.objects.filter(email=email).exists():
+        user = User.objects.get(email__exact=email)
+    else:
+        user = None
+    return user

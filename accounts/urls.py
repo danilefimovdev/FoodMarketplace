@@ -15,6 +15,8 @@ urlpatterns = [
     path('forgot_password/', views.forgot_password, name='forgot-password'),
     path('reset_password_validate/<uidb64>/<token>', views.reset_password_validate, name='reset-password-validate'),
     path('reset_password/', views.reset_password, name='reset-password'),
+    path('subscribe/', views.subscribe_to_recommendations_mailing_list, name='subscribe'),
+    path('activate_subscription_validate/<uidb64>/<token>', views.confirm_subscription, name='confirm-subscription'),
 
     path('vendor/', include('vendors.urls')),
     path('customer/', include('customers.urls')),

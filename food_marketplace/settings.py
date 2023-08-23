@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'customers',
     'orders',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -99,14 +100,13 @@ CACHES = {
 # Celery settings
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_TIMEZONE = "Asia/Tashkent"
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 5 * 60
 # CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
 CELERY_BROKER_CONNECTION_RETRY = True
-# CELERY_ACCEPT_CONTENT = ['application/json']
-# CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_TASK_SERIALIZER = 'json'
+
+CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+
 
 AUTH_USER_MODEL = 'accounts.User'
 

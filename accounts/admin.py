@@ -9,7 +9,7 @@ class CustomUserAdmin(UserAdmin):
     filter_horizontal = ()
     list_filter = ()
     ordering = ('-date_joined', )
-    list_display = ('email', 'first_name', 'last_name', 'username', 'role', 'is_active', )
+    list_display = ('email', 'first_name', 'last_name', 'username', 'role', 'is_active', 'is_subscribed')
 
 
 admin.site.register(User, CustomUserAdmin)

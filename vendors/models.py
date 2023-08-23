@@ -1,7 +1,6 @@
 from datetime import time, datetime
 from django.db import models
 from accounts.models import UserProfile, User
-from accounts.utils import send_notification
 
 
 class VendorQuerySet(models.QuerySet):
