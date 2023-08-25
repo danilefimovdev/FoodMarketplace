@@ -106,6 +106,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_BROKER_CONNECTION_RETRY = True
 
 CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_IMPORTS = ("accounts.services", "mailings")
 
 
 AUTH_USER_MODEL = 'accounts.User'
