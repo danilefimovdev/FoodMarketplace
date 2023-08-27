@@ -23,7 +23,6 @@ def send_email(user_pk: int, email_template: str, message_subject: str):
     mail = EmailMessage(message_subject, message, to=[to_email], from_email=from_email)
     mail.content_subtype = 'html'
     mail.send()
-    print('Email was sent')
 
 
 def send_notification(message_subject: str, email_template: str, context: dict):

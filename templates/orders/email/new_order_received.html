@@ -63,8 +63,8 @@
 
          {% for food_title, food_data in ordered_food.items %}
             <tr>
-                <td><img src="http://{{domain}}{{ food_data.url }}" alt="Food image" width="60"></td>
-                <td><p style="margin: 0;">{{ food_title }}</p></td><td>{{ food_data.quantity. }} psc</td>
+                <td><img src="http://{{domain}}{{ food_data.image_url }}" alt="Food image" width="60"></td>
+                <td><p style="margin: 0;">{{ food_title }}</p></td><td>{{ food_data.quantity }} psc</td>
                 <td>$ {{ food_data.price }}</td>
             </tr>
          {% endfor %}

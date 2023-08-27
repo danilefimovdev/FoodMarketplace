@@ -11,7 +11,7 @@ request_object = None
 class Payment(models.Model):
     PAYMENT_METHOD = (
         ('PayPal', 'PayPal'),
-        ('Cash', 'Cash'),
+        # ('Cash', 'Cash'),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     transaction_id = models.CharField(max_length=100)
@@ -70,7 +70,7 @@ class Order(models.Model):
     country = models.CharField(max_length=15, blank=True)
     state = models.CharField(max_length=15, blank=True)
     city = models.CharField(max_length=50)
-    pin_code = models.CharField(max_length=10)
+    pin_code = models.CharField(max_length=10, blank=True, null=True)
     total = models.FloatField(max_length=10)
     total_data = models.JSONField(blank=True, null=True)
     tax_data = models.JSONField(blank=True, help_text="Data format: {'tax_ty}")

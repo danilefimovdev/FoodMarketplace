@@ -34,11 +34,8 @@
 																		<li class="gal-img">
 																			<div class="drag-list">
 																				<div class="item-thumb">
-																					{% if vendor.user_profile.profile_picture %}
-																						<img style="border-radius: 10px;" src=" {{vendor.user_profile.profile_picture.url}}" alt="">
-																					{% else %}
-																						<img style="border-radius: 10px;" src="{% static 'images/default-restaurant.png' %}" alt="">
-																					{% endif %}
+																					<img style="border-radius: 10px;" src="{{vendor.user_profile.profile_picture.url}}" alt="Profile Picture">
+																					<img style="border-radius: 10px;" src="{% static 'logo/foodOnlineLogo.png' %}" alt="foodOnlineLogo" width="250">
 																				</div>
 																			</div>
 																		</li>
@@ -60,11 +57,7 @@
 																		<li class="gal-img">
 																			<div class="drag-list">
 																				<div class="item-thumb">
-																					{% if vendor.user_profile.profile_picture %}
-																						<img src="{{ profile.cover_photo.url }}" alt="">
-																					{% else %}
-																						<img src="{% static 'images/default-cover.png' %}" alt="">
-																					{% endif %}
+																					<img src="{{ vendor.user_profile.cover_photo.url }}" alt="Cover Photo">
 																				</div>
 																			</div>
 																		</li>

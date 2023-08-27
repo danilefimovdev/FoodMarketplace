@@ -213,6 +213,7 @@ def send_order_notification_to_vendors(order_number: str):
                         'price': food.price,
                     }
                 })
+                print(ordered_food)
             order_by_vendor = get_order_data_by_vendor(order_number=order_number, vendor_id=vendor.pk)
             order_data = {
                     'created_at': order.created_at,

@@ -57,8 +57,10 @@
 																		<img style="border-radius: 5px;" src="{{ item.fooditem.image.url }}" width="40" alt="Food Image">
 																	</td>
 																	<td><b>{{ item.fooditem }}</b></td>
-																	<td>{{ item.quantity }}</td>
-																	<td>${{ item.fooditem.price }}</td>
+																	<td>{{ item.quantity }} pcs</td>
+																	<td>
+																		<span class="float-right">${{ item.fooditem.price }}</span>
+																	</td>
 																</tr>
 															{% endfor %}
 														</tbody>
@@ -93,9 +95,7 @@
                                                                 <span id="total">{{grand_total}}</span>
                                                             </span>
                                                         </li>
-
 														<div id="paypal-button-container"></div>
-
                                                     </ul>
                                                 </div>
 											</div>

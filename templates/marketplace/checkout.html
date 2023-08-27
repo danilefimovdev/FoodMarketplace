@@ -84,7 +84,7 @@
 														<a href="{% url 'vendor-detail' item.fooditem.vendor.vendor_slug%}" class="badge badge-warning">{{item.fooditem.vendor}}</a>
 													</div>
 													<div class="quantity-holder" style="display: inline-block; position: absolute; top: 50%; transform: translateY(-50%); margin-top: -10px; margin-left: -20px;">
-														<span>{{item.quantity}} pieces</span>
+														<span>{{item.quantity}} pcs</span>
 													</div>
 													<div class="price-holder">
 														<span class="price">$ {{ item.fooditem.price }}</span>
@@ -106,15 +106,15 @@
 													</span>
 												</li>
 												{% for tax_type, tax_data in tax_dict.items %}
-												{% for tax_perc, tax_amount in tax_data.items %}
-												<li style="list-style-type: none;">
-													{{tax_type}} <small>({{tax_perc}}%)</small>
-													<span class="price float-right">
-														<span class="currency">$</span>
-														<span id="tax-{{tax_type}}">{{tax_amount}}</span>
-													</span>
-												</li>
-												{% endfor %}
+													{% for tax_perc, tax_amount in tax_data.items %}
+														<li style="list-style-type: none;">
+															{{tax_type}} <small>({{tax_perc}}%)</small>
+															<span class="price float-right">
+																<span class="currency">$</span>
+																<span id="tax-{{tax_type}}">{{tax_amount}}</span>
+															</span>
+														</li>
+													{% endfor %}
 												{% endfor %}
 												<hr>
 												<li style="list-style-type: none; font-weight: 600">
@@ -131,10 +131,10 @@
 														<input type="radio" name="payment_method" value="PayPal">
 														<img src="{% static 'images/PayPal.png' %}" alt="PayPal" width="100">
 													</label>
-													<label style="padding: 10px">
-														<input type="radio" name="payment_method" value="Cash">
-														<img src="{% static 'images/Cash.png' %}" alt="Cash" height="50">
-													</label>
+<!--													<label style="padding: 10px">-->
+<!--														<input type="radio" name="payment_method" value="Cash">-->
+<!--														<img src="{% static 'images/Cash.png' %}" alt="Cash" height="50">-->
+<!--													</label>-->
 												</div>
 												<button onclick="return payMethodConfirm();" type="submit" class="btn btn-danger p-2 w-100 mt-3">PLACE ORDER</button>
 											</ul>

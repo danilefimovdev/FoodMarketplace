@@ -1,4 +1,3 @@
-import django.core.cache
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
@@ -55,8 +54,7 @@ def payments(request):
 
         payment_id = create_payment(user_id=request.user.pk, order_number=order_number, payment_method=payment_method,
                                     status=status, transaction_id=transaction_id)
-        create_ordered_food_item(user_id=request.user.pk, order_number=order_number,
-                                                     payment_id=payment_id)
+        create_ordered_food_item(user_id=request.user.pk, order_number=order_number, payment_id=payment_id)
         send_order_notification_to_vendors(order_number=order_number)
         send_order_notification_to_customer(
             order_number=order_number,
