@@ -53,8 +53,6 @@
 																	<td><span class="order-status" style="background-color: #196dd4; padding: 3px; padding-right: 15px; padding-left: 15px; color: white; border-radius: 4px;">{{ order.status }}</span></td>
 																{% elif order.status == 'Completed' %}
 																	<td><span class="order-status" style="background-color: #38a326; padding: 3px; padding-right: 15px; padding-left: 15px; color: white; border-radius: 4px;">{{ order.status }}</span></td>
-																{% elif order.status == 'Cancelled' %}
-																	<td><span class="order-status" style="background-color: #e00000; padding: 3px; padding-right: 15px; padding-left: 15px; color: white; border-radius: 4px;">{{ order.status }}</span></td>
 																{% endif %}
 																<td><a href="{% url 'c-order-details' order.order_number %}" class="btn btn-danger active" role="button" style="padding: 3px; padding-right: 15px; padding-left: 15px;" aria-pressed="true">Details</a></td>
 															</tr>

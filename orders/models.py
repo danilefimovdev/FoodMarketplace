@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from django.db.models import QuerySet
 
@@ -28,8 +30,14 @@ class OrderQuerySet(models.QuerySet):
     def paid_orders_by_user(self, user):
         return self.filter(user=user, is_ordered=True)
 
-    def current_month_orders_by_vendor(self, vendor, today):
-        return Order.objects.filter(vendor__in=[vendor.id],
+    def current_month_orders_by_vendor(self, vendor_pk, today):
+        return Order.objects.filter(vendor__in=[vendor_pk],
+                                    created_at__month=today.month,
+                                    created_at__year=today.year)
+
+    def current_day_orders_by_vendor(self, vendor_pk, today):
+        return Order.objects.filter(vendor__in=[vendor_pk],
+                                    created_at__day=today.day,
                                     created_at__month=today.month,
                                     created_at__year=today.year)
 
@@ -38,25 +46,27 @@ class OrderManager(models.Manager):
     def get_queryset(self):
         return OrderQuerySet(self.model, using=self._db)
 
-    def get_total_revenue(self, orders: QuerySet) -> float:
+    def get_total_revenue(self, orders: QuerySet, vendor_id: int) -> float:
         revenue = 0
         for order in orders:
-            revenue += order.get_data_by_vendor()['total']
+            revenue += order.get_total_by_vendor(vendor_id=vendor_id)
         return round(revenue, 2)
 
     def paid_orders_by_user(self, user):
         return self.get_queryset().paid_orders_by_user(user)
 
-    def current_month_orders_by_vendor(self, vendor, today):
-        return self.get_queryset().current_month_orders_by_vendor(vendor, today)
+    def current_month_orders_by_vendor(self, vendor_pk: int, today: datetime.datetime):
+        return self.get_queryset().current_month_orders_by_vendor(vendor_pk, today)
+
+    def current_day_orders_by_vendor(self, vendor_pk: int, today: datetime.datetime):
+        return self.get_queryset().current_day_orders_by_vendor(vendor_pk, today)
 
 
 class Order(models.Model):
     STATUS = (
         ('New', 'New'),
         ('Accepted', 'Accepted'),
-        ('Completed', 'Completed'),
-        ('Cancelled', 'Cancelled'),
+        ('Completed', 'Completed')
     )
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True)
@@ -89,6 +99,16 @@ class Order(models.Model):
 
     def order_placed_to(self):
         return ', '.join([str(i) for i in self.vendor.all()])
+
+    def get_total_by_vendor(self, vendor_id: int) -> float:
+
+        total_data = self.total_data
+        data = total_data.get(str(vendor_id))
+        subtotal = 0
+        for subtotal_, tax_data in data.items():
+            subtotal += float(subtotal_)
+        return subtotal
+
 
     def __str__(self):
         return self.order_number
