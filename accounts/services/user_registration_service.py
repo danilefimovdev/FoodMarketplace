@@ -61,10 +61,11 @@ def register_new_vendor(user_form_data: UserRegistrationDataRow, vendor_form_dat
 def register_new_user(form_data: UserRegistrationDataRow, role: User.ROLE_CHOICE) -> int:
     """Service that register new User"""
 
-    user_pk = _create_user_with_data_from_form(form_data, role)
-    _send_verification_email(user_pk)
+    user_id = _create_user_with_data_from_form(form_data, role)
+    _create_user_profile(user_id=user_id)
+    _send_verification_email(user_id)
 
-    return user_pk
+    return user_id
 
 
 def _create_user_with_data_from_form(data: UserRegistrationDataRow, role: User.ROLE_CHOICE) -> int:
@@ -78,6 +79,17 @@ def _create_user_with_data_from_form(data: UserRegistrationDataRow, role: User.R
     created_user.role = role
     created_user.save()
     return created_user.pk
+
+
+def _create_user_profile(user_id: int):
+
+    user = User.objects.get(pk=user_id)
+    if user.role == User.VENDOR:
+        profile_picture = "default_images/default_restaurant_photo.png"
+    else:  # customer
+        profile_picture = "default_images/default_customer_photo.png"
+    UserProfile.objects.create(user=user,
+                               profile_picture=profile_picture)
 
 
 def _send_verification_email(user_id: int) -> None:

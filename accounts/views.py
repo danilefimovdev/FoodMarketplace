@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages, auth
 
 from accounts.forms import UserForm
-from accounts.models import User
+from accounts.models import User, UserProfile
 from accounts.services import send_reset_password_email, set_new_password, validate_user, register_new_user, \
     activate_user_account, UserRegistrationDataRow, VendorRegistrationDataRow, register_new_vendor
 from accounts.services.user_subscription_service import send_activate_subscription_email, activate_subscription
@@ -160,8 +160,10 @@ def customer_dashboard(request):
     """Represent customer dashboard"""
 
     recent_orders = Order.objects.paid_orders_by_user(user=request.user).order_by('-created_at')[:5]
+    customer_profile = UserProfile.objects.get(user=request.user)
     context = {
         'recent_orders': recent_orders,
+        'customer_profile': customer_profile
     }
     return render(request, 'accounts/customer_dashboard.html', context=context)
 

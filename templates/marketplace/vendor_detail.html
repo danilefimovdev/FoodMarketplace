@@ -20,11 +20,7 @@
 									<div class="company-info">
 										<div class="img-holder">
 											<figure>
-												{% if vendor.user_profile.profile_picture %}
-													<img style="border-radius: 10px;" src="{{ vendor.user_profile.profile_picture.url }}" alt="">
-												{% else %}
-													<img style="border-radius: 10px;" src="{% static 'images/default-profile.png' %}" alt="">
-												{% endif %}
+												<img style="border-radius: 10px;" src="{{ vendor.user_profile.profile_picture.url }}" alt="">
 											</figure>
 										</div>
 										<div class="text-holder">

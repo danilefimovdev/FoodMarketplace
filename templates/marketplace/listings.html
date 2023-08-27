@@ -27,11 +27,7 @@
 											<li style="line-height: 15px;">
 												<div class="img-holder">
 													<figure>
-														{% if vendor.user_profile.profile_picture %}
-															<img style="border-radius: 10px;" src="{{ vendor.user_profile.profile_picture.url }}" class="img-list wp-post-image" alt="">
-														{% else %}
-															<img style="border-radius: 10px;" src="{% static 'images/default-profile.png' %}" class="img-list wp-post-image" alt="">
-														{% endif %}
+														<img style="border-radius: 10px;" src="{{ vendor.user_profile.profile_picture.url }}" class="img-list wp-post-image" alt="">
 													</figure>
 													{% if vendor.is_open %}
 														<span class="restaurant-status open"><em class="bookmarkRibbon"></em>Open</span>

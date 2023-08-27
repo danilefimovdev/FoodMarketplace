@@ -4,8 +4,8 @@
 
 <div class="page-section restaurant-detail-image-section" style=" background:
     url(
-        {% if vendor.user_profile.cover_photo %} {{vendor.user_profile.cover_photo.url}}
-        {% else %} {% static 'images/default-cover.png' %}
+        {% if vendor %} {{ vendor.user_profile.cover_photo.url }}
+        {% else %} {{ customer_profile.cover_photo.url }}
         {% endif %} )
     no-repeat scroll 0 0 / cover;">
     <!-- Container Start -->
@@ -18,23 +18,32 @@
                       <div class="company-info">
                           <div class="img-holder">
                               <figure>
-                                  {% if vendor.user_profile.profile_picture %}
-                                      <img src=" {{vendor.user_profile.profile_picture.url}}" alt="">
+                                  {% if customer_profile %}
+                                      <img src="{{ customer_profile.profile_picture.url }}" alt="Profile Picture">
                                   {% else %}
-                                      <img src="{% static 'images/default-profile.png' %}" alt="">
+                                      <img src="{{ vendor.user_profile.profile_picture.url }}" alt="Profile Picture">
                                   {% endif %}
                               </figure>
                           </div>
                           <div class="text-holder">
-                              <span class="restaurant-title">{{vendor.vendor_name}}</span>
                               <div class="text">
-                                  {% if user.phone_number %}
-                                      <i class="icon-phone"></i>
-                                      <p>{{ user.phone_number }}</p>
+                                  {% if vendor %}
+                                    <i class="bi bi-shop-window"></i>
+                                    <p>{{vendor.vendor_name}}</p>
                                   {% endif %}
-                                  {% if user.phone_number %}
-                                      <i class="icon-envelope"></i>
-                                      <p>{{ user.email }}</p>
+                                  {% if user.phone_number%}
+                                    <i class="icon-phone"></i>
+                                    <p>{{ user.phone_number }}</p>
+                                  {% endif %}
+                                    <i class="icon-envelope"></i>
+                                    <p>{{ user.email }}</p>
+                                  {% if user.user_profile.address %}
+                                    <i class="bi bi-geo-fill"></i>
+                                    <p>{{ user.user_profile.address }}</p>
+                                  {% endif %}
+                                  {% if vendor.user_profile.address %}
+                                    <i class="bi bi-geo-fill"></i>
+                                    <p>{{ vendor.user_profile.address }}</p>
                                   {% endif %}
                               </div>
                           </div>
