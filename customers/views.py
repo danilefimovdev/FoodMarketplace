@@ -51,8 +51,8 @@ def order_details(request, order_number):
         return redirect('my-account')
     else:
         ordered_food = OrderedFood.objects.filter(order=order)
-        total = order.total
-        subtotal = total - order.total_tax
+        total = order(order.total, 2)
+        subtotal = round((total - order.total_tax), 2)
         taxes = json.loads(order.tax_data)
         context = {
             'order': order,

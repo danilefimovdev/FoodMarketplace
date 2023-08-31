@@ -12,5 +12,5 @@ class OrderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(OrderForm, self).__init__(*args, **kwargs)
         for field in self.fields:
-            if field in ('first_name', 'last_name', 'phone', 'email'):
+            if field in ('first_name', 'last_name', 'email'):
                 self.fields[field].widget.attrs['readonly'] = 'readonly'

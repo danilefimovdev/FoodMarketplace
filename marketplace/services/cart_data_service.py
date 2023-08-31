@@ -17,7 +17,7 @@ def get_tax_data_of_cart(subtotal: float) -> dict:
         tax_dict.update({tax_type: {str(percentage): str(tax_amount)}})
         taxes += tax_amount
 
-    return {'tax_dict': tax_dict, 'taxes': taxes}
+    return {'tax_dict': tax_dict, 'taxes': round(taxes, 2)}
 
 
 def calculate_subtotal_of_cart(user_id: int) -> float:
@@ -28,7 +28,7 @@ def calculate_subtotal_of_cart(user_id: int) -> float:
         fooditem = FoodItem.objects.get(pk=item.fooditem.id)
         subtotal += round(fooditem.price * item.quantity)
 
-    return subtotal
+    return round(subtotal, 2)
 
 
 def count_cart_items_quantity(user_id: int) -> int:

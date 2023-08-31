@@ -1,7 +1,7 @@
 from django import forms
 
 from accounts.models import User, UserProfile
-from accounts.validators import allow_only_images_validator
+from accounts.validators import allow_only_images_validator, allow_only_square_images_validator
 
 
 class UserForm(forms.ModelForm):
@@ -24,7 +24,7 @@ class UserForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
 
     profile_picture = forms.FileField(widget=forms.FileInput({'class': 'btn btn-info'}),
-                                      validators=[allow_only_images_validator])
+                                      validators=[allow_only_images_validator, allow_only_square_images_validator])
     cover_photo = forms.FileField(widget=forms.FileInput({'class': 'btn btn-info'}),
                                   validators=[allow_only_images_validator])
     # uncomment if google services work

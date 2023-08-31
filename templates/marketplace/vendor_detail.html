@@ -15,6 +15,17 @@
 						<!-- Row Start -->
 						<div class="row">
 							<!-- Column Start -->
+							{% if vendor.is_open is False %}
+								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+									<div class="text-holder" style="text-align: center; margin-bottom: 40px;">
+										<span class="restaurant-title" style="color: white; font-size: 25px;">
+											<i class="bi bi-exclamation-square-fill" style="color: #FFA500; font-size: 25px;"></i>
+											You can not order from this restaurant because it is closed now
+											<i class="bi bi-exclamation-square-fill" style="color: #FFA500; font-size: 25px;"></i>
+										</span>
+									</div>
+								</div>
+							{% endif %}
 							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 								<div class="company-info-detail">
 									<div class="company-info">
@@ -24,7 +35,9 @@
 											</figure>
 										</div>
 										<div class="text-holder">
-											<span class="restaurant-title">{{vendor.vendor_name}} </span>
+											<span class="restaurant-title">{{vendor.vendor_name}}</span>
+										</div>
+										<div class="text-holder">
 											<div class="text">
 												<i class="icon-local_pizza"></i>
 												{% if vendor.user_profile.address %}
@@ -84,7 +97,7 @@
 										<ul class="menu-list">
 											{% for category in categories %}
 												{% if category.fooditems.all.count %}
-													<li><a href="#" class="menu-category-link"> {{category.category_name}} </a></li>
+													<li><a class="menu-category-link"> {{category.category_name}} </a></li>
 												{% endif %}
 											{% endfor %}
 										</ul>
@@ -94,7 +107,7 @@
 							<div class="col-lg-9 col-md-9 col-sm-8 col-xs-12">
 								<div class="tabs-holder horizontal">
 									<ul class="stickynav-tabs nav nav-tabs">
-										<li class="active"><a data-toggle="tab" href="#home"><i class="icon- icon-room_service"></i>Menu</a></li>
+										<li class="active"><a data-toggle="tab"><i class="icon- icon-room_service"></i>Menu</a></li>
 									</ul>
 									<div class="tab-content">
 										<div id="home" class="tab-pane in active">
@@ -117,7 +130,7 @@
 																		</div>
 																		<div class="price-holder">
 																			<span class="price">$ {{food.price}}</span>
-																			{% if user.is_authenticated and user.role == 2 %}
+																			{% if user.is_authenticated and user.role == 2 and vendor.is_open is True %}
 																				<a href="" class="add_to_cart" data-id="{{ food.id }}" data-url="{% url 'add-to-cart' food.id %}"
 																				   style="margin-right: 28px"><i class="icon-plus4 text-color"></i></a>
 																				<label id="qty-{{food.id}}">0</label>

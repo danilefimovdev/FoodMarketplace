@@ -65,7 +65,7 @@ def get_cart_amounts(user_id: int):
     tax_data = get_tax_data_of_cart(subtotal=subtotal)
     tax_dict = tax_data['tax_dict']
     taxes = tax_data['taxes']
-    grand_total = subtotal + taxes
+    grand_total = round((subtotal + taxes), 2)
 
     return dict(subtotal=str(subtotal), taxes=str(taxes), grand_total=str(grand_total), tax_dict=tax_dict)
 

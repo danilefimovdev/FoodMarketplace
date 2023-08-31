@@ -14,11 +14,11 @@ def get_cart_counter(request):
 def get_cart_amounts(request):
 
     if request.user.is_authenticated:
-        subtotal = calculate_subtotal_of_cart(request.user.pk)
+        subtotal = round(calculate_subtotal_of_cart(request.user.pk), 2)
         tax_data = get_tax_data_of_cart(subtotal=subtotal)
         tax_dict = tax_data['tax_dict']
         taxes = tax_data['taxes']
-        grand_total = subtotal + taxes
+        grand_total = round((subtotal + taxes), 2)
         response = dict(subtotal=subtotal, taxes=taxes, grand_total=grand_total, tax_dict=tax_dict)
     else:
         response = {}

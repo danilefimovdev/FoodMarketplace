@@ -139,7 +139,6 @@ def vendor_dashboard(request):
     vendor = Vendor.objects.get(user=request.user)
     orders = Order.objects.filter(vendor__in=[vendor.id], is_ordered=True).order_by('-created_at')
     recent_orders = orders[:10]
-    print('today', datetime.today().day)
     current_day_orders = Order.objects.current_day_orders_by_vendor(vendor_pk=vendor.pk, today=datetime.today())
     day_revenue = Order.objects.get_total_revenue(current_day_orders, vendor_id=vendor.pk)
     current_month_orders = Order.objects.current_month_orders_by_vendor(vendor_pk=vendor.pk, today=datetime.today())

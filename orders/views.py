@@ -1,9 +1,10 @@
 import simplejson as json
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
+from accounts.utils import check_role_vendor
 from marketplace.models import Cart
 from marketplace.services.cart_manipulation_services import get_cart_amounts, get_ordered_cart_items_by_user, \
     clean_customer_cart
@@ -79,7 +80,7 @@ def order_complete(request):
     try:
         order = Order.objects.get(order_number=order_number, payment__transaction_id=transaction_id, is_ordered=True)
         ordered_food = OrderedFood.objects.filter(order=order)
-        total = order.total
+        total = round(order.total, 2)
         subtotal = round((total - order.total_tax), 2)
         taxes = json.loads(order.tax_data)
         context = {
@@ -92,4 +93,3 @@ def order_complete(request):
         return render(request, 'orders/order_complete.html', context=context)
     except Exception:
         return redirect('home')
-

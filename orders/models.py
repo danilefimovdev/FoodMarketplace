@@ -33,13 +33,15 @@ class OrderQuerySet(models.QuerySet):
     def current_month_orders_by_vendor(self, vendor_pk, today):
         return Order.objects.filter(vendor__in=[vendor_pk],
                                     created_at__month=today.month,
-                                    created_at__year=today.year)
+                                    created_at__year=today.year,
+                                    is_ordered=True)
 
     def current_day_orders_by_vendor(self, vendor_pk, today):
         return Order.objects.filter(vendor__in=[vendor_pk],
                                     created_at__day=today.day,
                                     created_at__month=today.month,
-                                    created_at__year=today.year)
+                                    created_at__year=today.year,
+                                    is_ordered=True)
 
 
 class OrderManager(models.Manager):
@@ -74,7 +76,7 @@ class Order(models.Model):
     order_number = models.CharField(max_length=28)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    phone = models.CharField(max_length=15, blank=True)
+    phone = models.CharField(max_length=15)
     email = models.EmailField(max_length=50)
     address = models.CharField(max_length=200)
     country = models.CharField(max_length=15, blank=True)
@@ -104,11 +106,10 @@ class Order(models.Model):
 
         total_data = self.total_data
         data = total_data.get(str(vendor_id))
-        subtotal = 0
+        subtotal = 0.00
         for subtotal_, tax_data in data.items():
             subtotal += float(subtotal_)
-        return subtotal
-
+        return round(subtotal, 2)
 
     def __str__(self):
         return self.order_number

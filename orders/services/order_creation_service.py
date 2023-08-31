@@ -52,7 +52,7 @@ def split_order_data_by_vendor(vendors_id: List[int], cart_items_id: List[int]) 
     total_data = {}
     subtotal_by_vendor = _get_subtotal_by_vendor(cart_items_id=cart_items_id)
     for id_ in vendors_id:
-        subtotal = subtotal_by_vendor[id_]
+        subtotal = round(subtotal_by_vendor[id_], 2)
         tax_data = get_tax_data_of_cart(subtotal=subtotal)
         total_data.update({id_: {subtotal: tax_data['tax_dict']}})
 
