@@ -5,9 +5,9 @@ from django.shortcuts import render, redirect
 from django.contrib import messages, auth
 
 from accounts.forms import UserForm
-from accounts.models import User, UserProfile
-from accounts.services import send_reset_password_email, set_new_password, validate_user, register_new_user, \
-    activate_user_account, UserRegistrationDataRow, VendorRegistrationDataRow, register_new_vendor
+from accounts.models import UserProfile
+from accounts.services import send_reset_password_email, set_new_password, validate_user, register_new_customer, \
+    activate_user_account, register_new_vendor
 from accounts.services.user_subscription_service import send_activate_subscription_email, activate_subscription
 from accounts.utils import detect_user_role, redirect_if_authorized
 from marketplace.services.vendor_detail_service import check_if_vendor_could_be_listed
@@ -29,14 +29,7 @@ def register_customer(request):
         if request.method == 'POST':
             form = UserForm(request.POST)
             if form.is_valid():
-                form_data = UserRegistrationDataRow(
-                    first_name=form.cleaned_data['first_name'],
-                    last_name=form.cleaned_data['last_name'],
-                    username=form.cleaned_data['username'],
-                    email=form.cleaned_data['email'],
-                    password=form.cleaned_data['password']
-                )
-                register_new_user(form_data, role=User.CUSTOMER)
+                register_new_customer(user_form_data=form.cleaned_data)
                 messages.success(request, 'You have registered successfully. Check your email.')
                 return redirect('home')
         else:
@@ -62,18 +55,7 @@ def register_vendor(request):
             v_form = VendorForm(request.POST, request.FILES)
 
             if u_form.is_valid() and v_form.is_valid():
-                u_form_data = UserRegistrationDataRow(
-                    first_name=u_form.cleaned_data['first_name'],
-                    last_name=u_form.cleaned_data['last_name'],
-                    username=u_form.cleaned_data['username'],
-                    email=u_form.cleaned_data['email'],
-                    password=u_form.cleaned_data['password']
-                )
-                v_form_data = VendorRegistrationDataRow(
-                    vendor_name=v_form.cleaned_data['vendor_name'],
-                    vendor_license=v_form.cleaned_data['vendor_license']
-                )
-                register_new_vendor(u_form_data, v_form_data)
+                register_new_vendor(user_form_data=u_form.cleaned_data, vendor_form_data=v_form.cleaned_data)
                 messages.success(request, 'You have registered successfully. Check your email and wait for the approval')
                 return redirect('home')
         else:
@@ -96,7 +78,7 @@ def logout(request):
     auth.logout(request)
     messages.info(request, 'You logged out')
 
-    return redirect('login')
+    return redirect('login-site')
 
 
 # TODO add ability to login either username or email
@@ -110,14 +92,13 @@ def login(request):
             email = request.POST['email']
             password = request.POST['password']
             user = auth.authenticate(email=email, password=password)
-
             if user is not None:
                 auth.login(request, user)
                 messages.success(request, 'You are logged in')
                 return redirect('my-account')
             else:
                 messages.warning(request, 'You put invalid password or email')
-                return redirect('login')
+                return redirect('login-site')
         else:
             return render(request, 'accounts/login.html')
     else:
@@ -188,11 +169,14 @@ def forgot_password(request):
 
     if request.method == 'POST':
         email = request.POST['email']
-        is_sent = send_reset_password_email(email)
+        if email:
+            is_sent = send_reset_password_email(email)
+        else:
+            return render(request, 'accounts/forgot_password.html')
 
         if is_sent:
             messages.success(request, 'Password reset link has been sent to your email address')
-            return redirect('login')
+            return redirect('login-site')
         else:
             messages.success(request, 'Account does not exist')
             return redirect('forgot-password')
@@ -227,7 +211,7 @@ def reset_password(request):
             pk = request.session.get('uid')
             set_new_password(pk, password)
             messages.success(request, 'Password reset successfully')
-            return redirect('login')
+            return redirect('login-site')
 
         else:
             messages.error(request, 'Passwords do not match')

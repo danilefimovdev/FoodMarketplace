@@ -42,10 +42,10 @@
 
 						<a class="btn btn-outline-danger text-uppercase font-weight-bold" href="{% url 'marketplace' %}">Marketplace</a>
 						{% if user.is_authenticated %}
-							<a class="cs-color cs-popup-joinus-btn login-popup ml-1 text-danger" href="{% url 'logout' %}">Logout</a>
+							<a class="cs-color cs-popup-joinus-btn login-popup ml-1 text-danger" href="{% url 'logout-site' %}">Logout</a>
 							<a class="cs-color cs-popup-joinus-btn login-popup" href="{% url 'my-account' %}">My account</a>
 						{% else %}
-							<a class="cs-color cs-popup-joinus-btn login-popup ml-1" href="{% url 'login' %}">Login</a> /
+							<a class="cs-color cs-popup-joinus-btn login-popup ml-1" href="{% url 'login-site' %}">Login</a> /
 							<span>
 								<a class="cs-color cs-popup-joinus-btn login-popup ml-0" href="{% url 'register-user' %}" >Register</a>
 							</span>

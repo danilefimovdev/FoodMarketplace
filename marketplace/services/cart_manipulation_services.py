@@ -7,12 +7,12 @@ from marketplace.services.cart_data_service import count_cart_items_quantity, ge
 from menu.models import FoodItem
 
 
-def add_item_to_cart(food_id: int, user_id: int, food_title: str) -> dict:
+def add_item_to_cart(food_id: int, user_id: int, quantity: int = None) -> dict:
 
     try:
-        result = _increase_cart_item_quantity(food_id=food_id, user_id=user_id)
+        result = _increase_cart_item_quantity(food_id=food_id, user_id=user_id, quantity=quantity)
     except ObjectDoesNotExist:
-        result = _add_new_cart_item(food_id=food_id, user_id=user_id, food_title=food_title)
+        result = _add_new_cart_item(food_id=food_id, user_id=user_id, quantity=quantity)
 
     response = _form_response(
         qty=result['qty'],
@@ -71,11 +71,12 @@ def get_cart_amounts(user_id: int):
 
 
 def check_does_fooditem_exist(food_id: int):
+
     try:
-        food = FoodItem.objects.get(id=food_id)
-        return {'title': food.food_title}
+        FoodItem.objects.get(id=food_id)
+        return True
     except ObjectDoesNotExist:
-        return {}
+        return False
 
 
 def check_does_cart_item_exist(food_id: int = None, user_id: int = None, cart_id: int = None):
@@ -120,11 +121,14 @@ def _form_response(message: str, qty: int, user_id: int) -> dict:
     return response
 
 
-def _increase_cart_item_quantity(food_id: int, user_id: int):
+def _increase_cart_item_quantity(food_id: int, user_id: int, quantity: int = None):
 
     cart_item = Cart.objects.get(user=user_id, fooditem=food_id)
     # increase cart quantity
-    cart_item.quantity += 1
+    if quantity:
+        cart_item.quantity = quantity
+    else:
+        cart_item.quantity += 1
     message = 'Increased the cart item quantity'
     cart_item.save()
 
@@ -132,12 +136,13 @@ def _increase_cart_item_quantity(food_id: int, user_id: int):
     return response
 
 
-def _add_new_cart_item(food_id, user_id: int, food_title: str):
+def _add_new_cart_item(food_id, user_id: int, quantity: int = None):
 
+    quantity = quantity if quantity else 1
     user = User.objects.get(pk=user_id)
     fooditem = FoodItem.objects.get(pk=food_id)
-    cart_item = Cart.objects.create(user=user, fooditem=fooditem, quantity=1)
-    message = f"Added '{food_title}' to your cart"
+    cart_item = Cart.objects.create(user=user, fooditem=fooditem, quantity=quantity)
+    message = f"Added '{fooditem.food_title}' to your cart"
 
     response = dict(message=message, qty=cart_item.quantity)
     return response

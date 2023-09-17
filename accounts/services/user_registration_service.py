@@ -50,15 +50,23 @@ def subscribe_user_account(uidb64: int, token: str) -> bool:
     return success
 
 
-def register_new_vendor(user_form_data: UserRegistrationDataRow, vendor_form_data: VendorRegistrationDataRow) -> None:
+def register_new_vendor(user_form_data: dict, vendor_form_data: dict) -> int:
     """Register new vendor"""
 
-    user_id = register_new_user(form_data=user_form_data, role=User.VENDOR)
+    user_id = _register_new_user(form_data=user_form_data, role=User.VENDOR)
     vendor_id = _create_vendor(user_id=user_id, vendor_form_data=vendor_form_data)
     set_default_opening_hours(vendor_id=vendor_id)
+    return user_id
 
 
-def register_new_user(form_data: UserRegistrationDataRow, role: User.ROLE_CHOICE) -> int:
+def register_new_customer(user_form_data: dict) -> int:
+    """Register new vendor"""
+
+    user_id = _register_new_user(form_data=user_form_data, role=User.CUSTOMER)
+    return user_id
+
+
+def _register_new_user(form_data: dict, role: User.ROLE_CHOICE) -> int:
     """Service that register new User"""
 
     user_id = _create_user_with_data_from_form(form_data, role)
@@ -68,14 +76,11 @@ def register_new_user(form_data: UserRegistrationDataRow, role: User.ROLE_CHOICE
     return user_id
 
 
-def _create_user_with_data_from_form(data: UserRegistrationDataRow, role: User.ROLE_CHOICE) -> int:
+def _create_user_with_data_from_form(data: dict, role: User.ROLE_CHOICE) -> int:
     """Create User with passed data from form"""
 
-    created_user = User.objects.create_user(first_name=data.first_name,
-                                            last_name=data.last_name,
-                                            username=data.username,
-                                            email=data.email,
-                                            password=data.password)
+    created_user = User.objects.create_user(first_name=data['first_name'], last_name=data['last_name'],
+                                            username=data['username'], email=data['email'], password=data['password'])
     created_user.role = role
     created_user.save()
     return created_user.pk
@@ -106,17 +111,17 @@ def _set_user_status_active(user: User) -> None:
     user.save()
 
 
-def _create_vendor(user_id: int, vendor_form_data: VendorRegistrationDataRow) -> int:
+def _create_vendor(user_id: int, vendor_form_data: dict) -> int:
     """Create Vendor object in database"""
 
     user = User.objects.get(pk=user_id)
-    slug = slugify(vendor_form_data.vendor_name)
+    slug = slugify(vendor_form_data['vendor_name'])
     user_profile = UserProfile.objects.get(user=user)
     vendor = Vendor.objects.create(
         user=user,
         user_profile=user_profile,
-        vendor_name=vendor_form_data.vendor_name,
-        vendor_license=vendor_form_data.vendor_license,
+        vendor_name=vendor_form_data['vendor_name'],
+        vendor_license=vendor_form_data['vendor_license'],
         vendor_slug=slug
     )
     return vendor.pk

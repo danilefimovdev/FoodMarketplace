@@ -34,7 +34,25 @@ INSTALLED_APPS = [
     'customers',
     'orders',
     'django_celery_beat',
+
+    'rest_framework',
+    'api',
+    'rest_framework.authtoken',
+    'djoser'
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # 'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -160,7 +178,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = 'login'
+LOGIN_URL = 'login-site'
 
 # SMTP server
 EMAIL_HOST = os.getenv("EMAIL_HOST")

@@ -32,9 +32,9 @@ def add_to_cart(request, food_id):
         # check if the food item exists
         is_existed = check_does_fooditem_exist(food_id=food_id)
         if is_existed:
-            response = add_item_to_cart(food_id=food_id, user_id=request.user.pk, food_title=is_existed['title'])
+            response = add_item_to_cart(food_id=food_id, user_id=request.user.pk)
         else:
-            response = {'status': 'Failed', 'message': 'add_item_to_cart: This food does not exist'}
+            response = {'status': 'Failed', 'message': 'This food does not exist'}
     else:
         response = {'status': 'Failed', 'message': 'Invalid request'}
     return JsonResponse(response)
