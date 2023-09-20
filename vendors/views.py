@@ -135,15 +135,19 @@ def add_food(request):
 
     if request.method == 'POST':
         form = FoodItemForm(request.POST, request.FILES)
+        print(request.POST)
         if form.is_valid():
             try:
                 category_slug = create_or_update_fooditem(vendor_id=vendor_id, form_data=form.cleaned_data)
                 return redirect('fooditems-by-category', category_slug)
             except IntegrityError:
                 messages.warning(request, 'Food with the entered "Food Title" already exists')
+        context = {'form': form}
     else:
         form = FoodItemForm()
-    return render(request, 'vendors/add_food.html', context={'form': form})
+        current_vendor_categories = Category.objects.filter(vendor=vendor_id)
+        context = {'form': form, 'categories': current_vendor_categories}
+    return render(request, 'vendors/add_food.html', context=context)
 
 
 @login_required

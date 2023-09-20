@@ -19,6 +19,7 @@ class FoodItemForm(forms.ModelForm):
 
     image = forms.FileField(widget=forms.FileInput(attrs={'class': 'btn btn-info w-100'}),
                             validators=[allow_only_images_validator])
+    category = forms.Field
 
     class Meta:
         model = FoodItem
@@ -27,5 +28,4 @@ class FoodItemForm(forms.ModelForm):
     def clean_food_title(self):
         food_title = self.cleaned_data['food_title'].lower().capitalize()
         return food_title
-
 

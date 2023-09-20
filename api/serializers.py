@@ -6,6 +6,8 @@ from rest_framework.exceptions import ValidationError
 from accounts.models import User
 from accounts.services import send_reset_password_email
 from accounts.services.user_registration_service import register_new_customer, register_new_vendor
+from marketplace.models import Cart
+from menu.models import Category, FoodItem
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):
@@ -105,9 +107,60 @@ class ForgetPasswordFormSerializer(serializers.Serializer):
         send_reset_password_email(email=email)
 
 
+class FoodItemSerializer(serializers.ModelSerializer):
+
+    url = serializers.HyperlinkedRelatedField(read_only=True, view_name='fooditems-detail')
+
+    class Meta:
+        model = FoodItem
+        fields = ['food_title', 'description', 'price', 'image', 'url']
 
 
+class CategorySerializer(serializers.ModelSerializer):
+
+    fooditems = serializers.HyperlinkedRelatedField(read_only=True, view_name='fooditems-detail', many=True)
+
+    class Meta:
+        model = Category
+        fields = ['category_name', 'description', 'fooditems']
 
 
+class ReadCartSerializer(serializers.ModelSerializer):
+
+    quantity = serializers.IntegerField()
+    fooditem = FoodItemSerializer(read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'quantity', 'fooditem']
+        read_only_fields = ['id', 'fooditem']
 
 
+class CartCreateSerializer(serializers.ModelSerializer):
+
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    fooditem = serializers.PrimaryKeyRelatedField(
+         required=True,
+         queryset=FoodItem.objects.all(),
+     )
+    quantity = serializers.IntegerField(required=True)
+
+    def update(self, instance, validated_data):
+        instance.quantity = validated_data.get('quantity', instance.quantity)
+        instance.save()
+        return instance
+
+    def create(self, validated_data):
+        try:
+            instance = Cart.objects.get(user=validated_data['user'], fooditem=validated_data['fooditem'])
+            instance.quantity = validated_data.get('quantity', instance.quantity)
+            instance.save()
+            return instance
+        except Exception:
+            instance = Cart.objects.create(**validated_data)
+            return instance
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'quantity', 'fooditem', 'user']
+        read_only_fields = ['id']
