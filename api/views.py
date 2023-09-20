@@ -8,11 +8,14 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet, GenericViewSet
 from rest_framework import status, mixins
 
+from api.filters import filter_fooditems
 from api.permissions import IsOwner
 from api.serializers import CustomAuthTokenSerializer, VendorCreateSerializer, UserCreateSerializer, \
-    ForgetPasswordFormSerializer, ReadCartSerializer, CartCreateSerializer
+    ForgetPasswordFormSerializer, RestaurantSerializer, FoodItemSerializer, ReadCartSerializer, CartCreateSerializer
 from marketplace.models import Cart
 from marketplace.services.cart_manipulation_services import get_cart_amounts
+from menu.models import FoodItem
+from vendors.models import Vendor
 
 
 class TokenAuthenticationViewSet(ViewSet):
@@ -68,6 +71,41 @@ class UsersViewSet(ViewSet):
 
         _MESSAGE = 'Reset password link was was sent to your email address.'
         return Response(status=status.HTTP_200_OK, data={'email': request.data['email'], 'message': _MESSAGE})
+
+
+class RestaurantsViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
+
+    lookup_field = 'vendor_slug'
+
+    @action(methods=['GET'], detail=True)
+    def fooditems(self, request, **kwargs):
+        vendor = self.get_queryset()
+        fooditems = vendor.fooditems.filter(is_available=True)
+        fooditems = filter_fooditems(queryset=fooditems, filter_params=self.request.query_params.dict())
+        serializer = self.get_serializer_class()(data=fooditems, many=True, context={'request': request})
+        serializer.is_valid()
+        return Response({'fooditems': serializer.data})
+
+    def get_queryset(self, vendor_pk=None):
+        vendor_slug = self.kwargs.get('vendor_slug')
+        if vendor_slug:
+            return Vendor.objects.get(vendor_slug=vendor_slug)
+        return Vendor.objects.valid_vendors()
+
+    def get_serializer_class(self):
+        if self.action == 'fooditems':
+            return FoodItemSerializer
+        else:
+            return RestaurantSerializer
+
+
+class FoodItemsViewSet(mixins.RetrieveModelMixin, GenericViewSet):
+
+    serializer_class = FoodItemSerializer
+
+    def get_queryset(self):
+        queryset = FoodItem.objects.filter(is_available=True)
+        return queryset
 
 
 class CartViewSet(mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin,

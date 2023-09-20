@@ -7,7 +7,8 @@ from accounts.models import User
 from accounts.services import send_reset_password_email
 from accounts.services.user_registration_service import register_new_customer, register_new_vendor
 from marketplace.models import Cart
-from menu.models import Category, FoodItem
+from menu.models import FoodItem
+from vendors.models import Vendor
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):
@@ -107,22 +108,64 @@ class ForgetPasswordFormSerializer(serializers.Serializer):
         send_reset_password_email(email=email)
 
 
+class RestaurantSerializer(serializers.ModelSerializer):
+
+    restaurant_picture_url = serializers.SerializerMethodField(read_only=True)
+    address = serializers.CharField(source='user_profile.address', read_only=True)
+    state = serializers.CharField(source='user_profile.state', read_only=True)
+    city = serializers.CharField(source='user_profile.city', read_only=True)
+    pin_code = serializers.CharField(source='user_profile.pin_code', read_only=True)
+    latitude = serializers.CharField(source='user_profile.latitude', read_only=True)
+    longitude = serializers.CharField(source='user_profile.longitude', read_only=True)
+    vendor_slug = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Vendor
+        fields = ['vendor_name', 'latitude', 'longitude', 'pin_code', 'city', 'state',
+                  'address', 'restaurant_picture_url', 'vendor_slug']
+
+    def get_restaurant_picture_url(self, Vendor):
+        request = self.context.get('request')
+        image_url = Vendor.user_profile.profile_picture.url
+        return request.build_absolute_uri(image_url)
+
+
+class RestaurantFullInfoSerializer(serializers.ModelSerializer):
+
+    restaurant_picture_url = serializers.SerializerMethodField(read_only=True)
+    address = serializers.CharField(source='user_profile.address', read_only=True)
+    state = serializers.CharField(source='user_profile.state', read_only=True)
+    city = serializers.CharField(source='user_profile.city', read_only=True)
+    pin_code = serializers.CharField(source='user_profile.pin_code', read_only=True)
+    latitude = serializers.CharField(source='user_profile.latitude', read_only=True)
+    longitude = serializers.CharField(source='user_profile.longitude', read_only=True)
+    vendor_slug = serializers.CharField(read_only=True)
+    categories = serializers.HyperlinkedRelatedField(read_only=True, view_name='categories-detail', many=True)
+
+    class Meta:
+        model = Vendor
+        fields = ['vendor_name', 'latitude', 'longitude', 'pin_code', 'city', 'state',
+                  'address', 'restaurant_picture_url', 'vendor_slug', 'categories']
+
+    def get_restaurant_picture_url(self, Vendor):
+        request = self.context.get('request')
+        image_url = Vendor.user_profile.profile_picture.url
+        return request.build_absolute_uri(image_url)
+
+
 class FoodItemSerializer(serializers.ModelSerializer):
 
-    url = serializers.HyperlinkedRelatedField(read_only=True, view_name='fooditems-detail')
+    fooditem_picture_url = serializers.SerializerMethodField(read_only=True)
+    category = serializers.StringRelatedField()
 
     class Meta:
         model = FoodItem
-        fields = ['food_title', 'description', 'price', 'image', 'url']
+        fields = ['category', 'food_title', 'description', 'price', 'fooditem_picture_url']
 
-
-class CategorySerializer(serializers.ModelSerializer):
-
-    fooditems = serializers.HyperlinkedRelatedField(read_only=True, view_name='fooditems-detail', many=True)
-
-    class Meta:
-        model = Category
-        fields = ['category_name', 'description', 'fooditems']
+    def get_fooditem_picture_url(self, fooditem):
+        request = self.context.get('request')
+        image_url = fooditem.image.url
+        return request.build_absolute_uri(image_url)
 
 
 class ReadCartSerializer(serializers.ModelSerializer):
@@ -157,7 +200,7 @@ class CartCreateSerializer(serializers.ModelSerializer):
             instance.save()
             return instance
         except Exception:
-            instance = Cart.objects.create(**validated_data)
+            instance = Cart.objects.get(**validated_data)
             return instance
 
     class Meta:
