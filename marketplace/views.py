@@ -95,7 +95,7 @@ def search(request):
         context = filter_vendors_by_geo_position(latitude=latitude, longitude=longitude,
                                                  radius=radius, address=address, context=context)
 
-    return render(request, 'marketplace/li stings.html', context=context)
+    return render(request, 'marketplace/listings.html', context=context)
 
 
 @login_required()

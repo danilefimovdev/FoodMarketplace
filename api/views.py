@@ -1,17 +1,21 @@
 import rest_framework.status
 from django.contrib import auth
+from django.forms import model_to_dict
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet, GenericViewSet
 from rest_framework import status, mixins
 
+from accounts.models import UserProfile
 from api.filters import filter_fooditems
 from api.permissions import IsOwner
 from api.serializers import CustomAuthTokenSerializer, VendorCreateSerializer, UserCreateSerializer, \
-    ForgetPasswordFormSerializer, RestaurantSerializer, FoodItemSerializer, ReadCartSerializer, CartCreateSerializer
+    ForgetPasswordFormSerializer, RestaurantSerializer, FoodItemSerializer, ReadCartSerializer, CartCreateSerializer, \
+    CustomerProfileSerializer, VendorProfileSerializer
 from marketplace.models import Cart
 from marketplace.services.cart_manipulation_services import get_cart_amounts
 from menu.models import FoodItem
@@ -59,9 +63,9 @@ class UsersViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        _MESSAGE = 'Verification email was sent to your email address.'
+        message = 'Verification email was sent to your email address.'
         return Response(status=status.HTTP_201_CREATED,
-                        data={'email': data['email'], 'message': _MESSAGE})
+                        data={'email': data['email'], 'message': message})
 
     @action(methods=['POST'], detail=False, url_path='forget-password')
     def reset_password(self, request):
@@ -69,16 +73,16 @@ class UsersViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        _MESSAGE = 'Reset password link was was sent to your email address.'
-        return Response(status=status.HTTP_200_OK, data={'email': request.data['email'], 'message': _MESSAGE})
+        message = 'Reset password link was was sent to your email address.'
+        return Response(status=status.HTTP_200_OK, data={'email': request.data['email'], 'message': message})
 
 
 class RestaurantsViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
 
     lookup_field = 'vendor_slug'
 
-    @action(methods=['GET'], detail=True)
-    def fooditems(self, request, **kwargs):
+    @action(methods=['GET'], detail=True, url_path='fooditems')
+    def show_fooditems(self, request, **kwargs):
         vendor = self.get_queryset()
         fooditems = vendor.fooditems.filter(is_available=True)
         fooditems = filter_fooditems(queryset=fooditems, filter_params=self.request.query_params.dict())
@@ -108,13 +112,13 @@ class FoodItemsViewSet(mixins.RetrieveModelMixin, GenericViewSet):
         return queryset
 
 
-class CartViewSet(mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin,
+class CartViewSet(mixins.DestroyModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin,
                   GenericViewSet):
 
     permission_classes = [IsAuthenticated, IsOwner, ]
     queryset = Cart.objects.all()
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request):
         queryset = self.get_queryset()
         serializer = self.get_serializer_class()(data=queryset, many=True)
         serializer.is_valid()
@@ -133,3 +137,43 @@ class CartViewSet(mixins.DestroyModelMixin, mixins.ListModelMixin, mixins.Create
         else:
             return Cart.objects.all()
 
+
+class ProfileViewSet(GenericViewSet, mixins.RetrieveModelMixin):
+
+    VENDOR = 1
+    CUSTOMER = 2
+
+    permission_classes = [IsAuthenticated]
+
+    @action(methods=['GET', 'PUT', 'PATCH'], detail=False, url_path='profile')
+    def profile(self, request):
+
+        if self.request.method == 'GET':
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        else:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(data=serializer.data)
+
+    def get_serializer_class(self):
+
+        if self.request.user.role == self.VENDOR:
+            return VendorProfileSerializer
+        else:
+            return CustomerProfileSerializer
+
+    def get_queryset(self):
+
+        if self.request.user.role == self.VENDOR:
+            return Vendor.objects.select_related('user_profile').all()
+        else:
+            return UserProfile.objects.select_related('user').all()
+
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj

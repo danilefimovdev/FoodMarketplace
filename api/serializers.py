@@ -1,9 +1,10 @@
 from django.contrib.auth import authenticate
+from django.template.defaultfilters import slugify
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from accounts.models import User
+from accounts.models import User, UserProfile
 from accounts.services import send_reset_password_email
 from accounts.services.user_registration_service import register_new_customer, register_new_vendor
 from marketplace.models import Cart
@@ -76,10 +77,10 @@ class UserCreateSerializer(serializers.Serializer):
         return User.objects.get(pk=user_id)
 
 
-class VendorCreateSerializer(UserCreateSerializer):
+class VendorCreateSerializer(serializers.Serializer):
 
-    vendor_name = serializers.CharField(max_length=50)
     vendor_license = serializers.ImageField()
+    vendor_name = serializers.CharField(max_length=50)
 
     def create(self, validated_data):
         user_data = validated_data
@@ -207,3 +208,147 @@ class CartCreateSerializer(serializers.ModelSerializer):
         model = Cart
         fields = ['id', 'quantity', 'fooditem', 'user']
         read_only_fields = ['id']
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    profile_picture = serializers.ImageField(write_only=True)
+    profile_picture_url = serializers.SerializerMethodField(read_only=True)
+    cover_photo = serializers.ImageField(write_only=True)
+    cover_photo_url = serializers.SerializerMethodField(read_only=True)
+    address = serializers.CharField(max_length=250, allow_blank=True, allow_null=True)
+    country = serializers.CharField(max_length=15, allow_blank=True, allow_null=True)
+    state = serializers.CharField(max_length=15, allow_blank=True, allow_null=True)
+    city = serializers.CharField(max_length=15, allow_blank=True, allow_null=True)
+    pin_code = serializers.CharField(max_length=6, allow_blank=True, allow_null=True)
+    latitude = serializers.CharField(max_length=20, allow_blank=True, allow_null=True)
+    longitude = serializers.CharField(max_length=20, allow_blank=True, allow_null=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ['profile_picture', 'cover_photo', 'address', 'country', 'state',
+                  'city', 'pin_code', 'latitude', 'longitude', 'profile_picture_url', 'cover_photo_url']
+
+    def get_profile_picture_url(self, profile):
+        request = self.context.get('request')
+        image_url = profile.profile_picture.url
+        return request.build_absolute_uri(image_url)
+
+    def get_cover_photo_url(self, profile):
+        request = self.context.get('request')
+        image_url = profile.cover_photo.url
+        return request.build_absolute_uri(image_url)
+
+
+class VendorProfileSerializer(serializers.ModelSerializer):
+
+    vendor_name = serializers.CharField(max_length=50)
+    vendor_slug = serializers.CharField(max_length=50, read_only=True)
+    vendor_license = serializers.ImageField(write_only=True)
+    vendor_license_url = serializers.SerializerMethodField(read_only=True)
+    is_approved = serializers.BooleanField(read_only=True)
+    is_listed = serializers.BooleanField(read_only=True)
+    profile_picture = serializers.ImageField(write_only=True, source='user_profile.profile_picture')
+    profile_picture_url = serializers.SerializerMethodField(read_only=True)
+    cover_photo = serializers.ImageField(write_only=True, source='user_profile.cover_photo')
+    cover_photo_url = serializers.SerializerMethodField(read_only=True)
+    address = serializers.CharField(max_length=250, allow_blank=True, allow_null=True, source='user_profile.address')
+    country = serializers.CharField(max_length=15, allow_blank=True, allow_null=True, source='user_profile.country')
+    state = serializers.CharField(max_length=15, allow_blank=True, allow_null=True, source='user_profile.state')
+    city = serializers.CharField(max_length=15, allow_blank=True, allow_null=True, source='user_profile.city')
+    pin_code = serializers.CharField(max_length=6, allow_blank=True, allow_null=True, source='user_profile.pin_code')
+    latitude = serializers.CharField(max_length=20, allow_blank=True, allow_null=True, source='user_profile.latitude')
+    longitude = serializers.CharField(max_length=20, allow_blank=True, allow_null=True, source='user_profile.longitude')
+
+    class Meta:
+        model = Vendor
+        fields = ['vendor_name', 'vendor_slug', 'vendor_license', 'vendor_license_url', 'is_approved',
+                  'is_listed', 'profile_picture', 'cover_photo', 'address', 'country', 'state', 'city',
+                  'pin_code', 'latitude', 'longitude', 'profile_picture_url', 'cover_photo_url']
+
+    def update(self, instance, validated_data):
+        vendor_fields = ('vendor_name', 'vendor_license', )
+        profile_fields = ('profile_picture', 'cover_photo', 'address', 'country', 'state', 'city',
+                          'pin_code', 'latitude', 'longitude', )
+
+        passed_vendor_name = validated_data.get('vendor_name')
+        if passed_vendor_name and instance.vendor_name != validated_data:
+            instance.vendor_slug = slugify(passed_vendor_name)
+
+        for field in vendor_fields:
+            instance.__setattr__(field, validated_data.get(field, instance.__getattribute__(field)))
+
+        user_profile_data = validated_data.get('user_profile')
+        if user_profile_data:
+            for field in profile_fields:
+                value = user_profile_data.get(field, instance.user_profile.__getattribute__(field))
+                instance.user_profile.__setattr__(field, value)
+
+        instance.save()
+        return instance
+
+    def get_vendor_license_url(self, vendor):
+        request = self.context.get('request')
+        image_url = vendor.vendor_license.url
+        return request.build_absolute_uri(image_url)
+
+    def get_profile_picture_url(self, vendor):
+        request = self.context.get('request')
+        image_url = vendor.user_profile.profile_picture.url
+        return request.build_absolute_uri(image_url)
+
+    def get_cover_photo_url(self, vendor):
+        request = self.context.get('request')
+        image_url = vendor.user_profile.cover_photo.url
+        return request.build_absolute_uri(image_url)
+
+
+class CustomerProfileSerializer(serializers.ModelSerializer):
+
+    first_name = serializers.CharField(max_length=50, source='user.first_name')
+    last_name = serializers.CharField(max_length=50, source='user.last_name')
+    phone_number = serializers.CharField(max_length=12, source='user.phone_number')
+    profile_picture = serializers.ImageField(write_only=True)
+    profile_picture_url = serializers.SerializerMethodField(read_only=True)
+    cover_photo = serializers.ImageField(write_only=True)
+    cover_photo_url = serializers.SerializerMethodField(read_only=True)
+    address = serializers.CharField(max_length=250, allow_blank=True, allow_null=True)
+    country = serializers.CharField(max_length=15, allow_blank=True, allow_null=True)
+    state = serializers.CharField(max_length=15, allow_blank=True, allow_null=True)
+    city = serializers.CharField(max_length=15, allow_blank=True, allow_null=True)
+    pin_code = serializers.CharField(max_length=6, allow_blank=True, allow_null=True)
+    latitude = serializers.CharField(max_length=20, allow_blank=True, allow_null=True)
+    longitude = serializers.CharField(max_length=20, allow_blank=True, allow_null=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ['first_name', 'last_name', 'phone_number', 'profile_picture',
+                  'cover_photo', 'address', 'country', 'state', 'city', 'pin_code',
+                  'latitude', 'longitude', 'profile_picture_url', 'cover_photo_url']
+
+    def get_profile_picture_url(self, profile):
+        request = self.context.get('request')
+        image_url = profile.profile_picture.url
+        return request.build_absolute_uri(image_url)
+
+    def get_cover_photo_url(self, profile):
+        request = self.context.get('request')
+        image_url = profile.cover_photo.url
+        return request.build_absolute_uri(image_url)
+
+    def update(self, instance, validated_data):
+        user_fields = ('first_name', 'last_name', 'phone_number', )
+        profile_fields = ('profile_picture', 'cover_photo', 'address', 'country',
+                          'state', 'city', 'pin_code', 'latitude', 'longitude', )
+
+        for field in profile_fields:
+            instance.__setattr__(field, validated_data.get(field, instance.__getattribute__(field)))
+
+        user_profile_data = validated_data.get('user')
+        if user_profile_data:
+            for field in user_fields:
+                value = user_profile_data.get(field, instance.user.__getattribute__(field))
+                instance.user.__setattr__(field, value)
+
+        instance.save()
+        return instance
