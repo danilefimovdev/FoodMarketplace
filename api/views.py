@@ -1,6 +1,5 @@
 import rest_framework.status
 from django.contrib import auth
-from django.forms import model_to_dict
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -12,13 +11,16 @@ from rest_framework import status, mixins
 
 from accounts.models import UserProfile
 from api.filters import filter_fooditems
-from api.permissions import IsOwner
+from api.permissions import IsOwner, IsCustomerAccountOwner, IsCustomer, IsVendor, IsVendorAccountOwner
 from api.serializers import CustomAuthTokenSerializer, VendorCreateSerializer, UserCreateSerializer, \
     ForgetPasswordFormSerializer, RestaurantSerializer, FoodItemSerializer, ReadCartSerializer, CartCreateSerializer, \
-    CustomerProfileSerializer, VendorProfileSerializer
+    CustomerProfileSerializer, VendorProfileSerializer, CustomerOrderShortInfoSerializer, \
+    CustomerOrderFullInfoSerializer, \
+    VendorOrderFullInfoSerializer, VendorOrderShortInfoSerializer
 from marketplace.models import Cart
 from marketplace.services.cart_manipulation_services import get_cart_amounts
 from menu.models import FoodItem
+from orders.models import Order
 from vendors.models import Vendor
 
 
@@ -113,14 +115,18 @@ class FoodItemsViewSet(mixins.RetrieveModelMixin, GenericViewSet):
 
 
 class CartViewSet(mixins.DestroyModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin,
-                  GenericViewSet):
+                  mixins.RetrieveModelMixin, GenericViewSet):
 
-    permission_classes = [IsAuthenticated, IsOwner, ]
-    queryset = Cart.objects.all()
+    permission_classes = [IsAuthenticated, IsCustomer, IsCustomerAccountOwner, IsOwner]
 
-    def list(self, request):
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer_class()(data=queryset, many=True)
+        serializer = self.get_serializer_class()(data=queryset, many=True, context={'request': request})
         serializer.is_valid()
         amounts = get_cart_amounts(user_id=request.user.pk)
         return Response(data={'carts': serializer.data, 'cart_amounts': amounts})
@@ -143,10 +149,8 @@ class ProfileViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     VENDOR = 1
     CUSTOMER = 2
 
-    permission_classes = [IsAuthenticated]
-
     @action(methods=['GET', 'PUT', 'PATCH'], detail=False, url_path='profile')
-    def profile(self, request):
+    def profile(self, request, *args, **kwargs):
 
         if self.request.method == 'GET':
             instance = self.get_object()
@@ -177,3 +181,70 @@ class ProfileViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         obj = get_object_or_404(self.get_queryset(), user=self.request.user)
         self.check_object_permissions(self.request, obj)
         return obj
+
+    def get_permissions(self):
+        permission_classes = [IsAuthenticated]
+        if self.request.user.role == self.VENDOR:
+            permission_classes.append(IsVendorAccountOwner)
+        else:
+            permission_classes.append(IsCustomerAccountOwner)
+        return permission_classes
+
+
+class CustomerOrdersViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
+
+    VENDOR = 1
+    CUSTOMER = 2
+
+    lookup_field = 'order_number'
+    permission_classes = [IsAuthenticated, IsCustomer, IsCustomerAccountOwner]
+
+    def get_serializer_class(self):
+
+        if self.kwargs.get('order_number'):
+            return CustomerOrderFullInfoSerializer
+        else:
+            return CustomerOrderShortInfoSerializer
+
+    def get_queryset(self):
+
+        return Order.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset(), order_number=self.kwargs.get('order_number')).order_by('-created_at')
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class VendorOrdersViewSet(GenericViewSet, mixins.ListModelMixin):
+
+    lookup_field = 'order_number'
+    permission_classes = [IsAuthenticated, IsVendor, IsVendorAccountOwner]
+
+    def list(self, request, *args, **kwargs):
+        vendor = Vendor.objects.get(vendor_slug=self.kwargs['vendor_slug'])
+        queryset = self.get_queryset()
+        serializer = self.get_serializer_class()(queryset, many=True, context={'vendor_pk': vendor.pk})
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        vendor = Vendor.objects.get(vendor_slug=self.kwargs['vendor_slug'])
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, context={'vendor_pk': vendor.pk})
+        return Response(serializer.data)
+
+    def get_queryset(self):
+
+        return Order.objects.filter(vendor__vendor_slug__in=[self.kwargs['vendor_slug']]).order_by('-created_at')
+
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset(), order_number=self.kwargs.get('order_number'))
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def get_serializer_class(self):
+
+        if self.kwargs.get('order_number'):
+            return VendorOrderFullInfoSerializer
+        else:
+            return VendorOrderShortInfoSerializer

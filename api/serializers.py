@@ -1,3 +1,6 @@
+import json
+from abc import ABC
+
 from django.contrib.auth import authenticate
 from django.template.defaultfilters import slugify
 
@@ -9,6 +12,8 @@ from accounts.services import send_reset_password_email
 from accounts.services.user_registration_service import register_new_customer, register_new_vendor
 from marketplace.models import Cart
 from menu.models import FoodItem
+from orders.models import Order, Payment, OrderedFood
+from orders.services.order_creation_service import get_order_data_by_vendor
 from vendors.models import Vendor
 
 
@@ -352,3 +357,109 @@ class CustomerProfileSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class CustomerOrderShortInfoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Order
+        fields = ['order_number', 'created_at', 'total', 'status']
+
+
+class VendorOrderShortInfoSerializer(serializers.ModelSerializer):
+
+    total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = ['order_number', 'created_at', 'total', 'status']
+
+    def get_total(self, order):
+        order_amounts = get_order_data_by_vendor(order_number=order.order_number, vendor_id=self.context['vendor_pk'])
+        return order_amounts['total']
+
+
+class OrderedFoodSerializer(serializers.ModelSerializer):
+
+    vendor = serializers.StringRelatedField(source='fooditem.vendor')
+    image = serializers.ImageField(source='fooditem.image')
+    food_title = serializers.CharField(source='fooditem.food_title')
+
+    class Meta:
+        model = OrderedFood
+        fields = ['image', 'food_title', 'vendor', 'quantity', 'price', ]
+
+
+class ABCOrderFullInfoSerializer(serializers.ModelSerializer):
+
+    payment = serializers.SerializerMethodField()
+    customer_detail = serializers.SerializerMethodField()
+    order_amounts = serializers.SerializerMethodField()
+    ordered_food = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = ['order_number', 'status', 'created_at', 'payment',
+                  'customer_detail', 'ordered_food', 'order_amounts']
+
+    def get_customer_detail(self, order) -> dict:
+
+        customer_detail = {
+            'first_name': order.first_name,
+            'last_name': order.last_name,
+            'address': order.address,
+            'phone': order.phone,
+            'email': order.email
+        }
+        return customer_detail
+
+    def get_order_amounts(self, order) -> dict:
+        pass
+
+    def get_ordered_food(self, order) -> list:
+        pass
+
+    def get_payment(self, order) -> dict:
+        return {'transaction_id': order.payment.transaction_id,
+                'payment_method': order.payment.payment_method}
+
+
+class CustomerOrderFullInfoSerializer(ABCOrderFullInfoSerializer):
+
+    def get_order_amounts(self, order) -> dict:
+        taxes = json.loads(order.tax_data)
+        order_amounts = {
+            'subtotal': order.total - order.total_tax,
+            'total_tax': order.total_tax,
+            'total': order.total,
+            'taxes': taxes
+        }
+        return order_amounts
+
+    def get_ordered_food(self, order) -> list:
+        ordered_food = []
+        ordered_food_query = OrderedFood.objects.filter(order=order)
+        for item in ordered_food_query:
+            ordered_food.append(OrderedFoodSerializer(instance=item).data)
+        return ordered_food
+
+
+class VendorOrderFullInfoSerializer(ABCOrderFullInfoSerializer):
+
+    order_amounts = serializers.SerializerMethodField()
+    ordered_food = serializers.SerializerMethodField()
+
+    def get_order_amounts(self, order) -> dict:
+        order_amounts = get_order_data_by_vendor(order_number=order.order_number, vendor_id=self.context['vendor_pk'])
+        return order_amounts
+
+    def get_ordered_food(self, order) -> list:
+        vendor_id = self.context['vendor_pk']
+        ordered_food = []
+        ordered_food_query = OrderedFood.objects.filter(order=order, fooditem__vendor__pk=vendor_id)
+        for item in ordered_food_query:
+            ordered_food.append(OrderedFoodSerializer(instance=item).data)
+        print(ordered_food)
+        return ordered_food
+
+

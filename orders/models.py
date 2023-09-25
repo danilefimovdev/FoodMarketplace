@@ -116,9 +116,9 @@ class Order(models.Model):
 
 
 class OrderedFood(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='ordered_food')
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, blank=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_ordered_food')
     fooditem = models.ForeignKey(FoodItem, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     price = models.FloatField()

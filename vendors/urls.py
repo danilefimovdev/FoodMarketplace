@@ -25,5 +25,4 @@ urlpatterns = [
 
     path('order-detail/<int:order_number>/', views.order_detail, name='v-order-detail'),
     path('orders/', views.my_orders, name='v-my-orders'),
-
 ]
