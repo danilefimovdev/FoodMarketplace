@@ -459,7 +459,6 @@ class VendorOrderFullInfoSerializer(ABCOrderFullInfoSerializer):
         ordered_food_query = OrderedFood.objects.filter(order=order, fooditem__vendor__pk=vendor_id)
         for item in ordered_food_query:
             ordered_food.append(OrderedFoodSerializer(instance=item).data)
-        print(ordered_food)
         return ordered_food
 
 
