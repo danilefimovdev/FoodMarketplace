@@ -93,8 +93,6 @@ WSGI_APPLICATION = 'food_marketplace.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
     "default": {
         # "ENGINE": "django.db.backends.postgresql",
@@ -108,30 +106,25 @@ DATABASES = {
 }
 
 # Caches settings
-
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://localhost:6379',
+        'LOCATION': os.getenv("CACHE_LOCATION")
     }
 }
 
 # Celery settings
-
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_TIMEZONE = "Asia/Tashkent"
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-# CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
-CELERY_BROKER_CONNECTION_RETRY = True
-
-CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
+# CELERY_BROKER_CONNECTION_RETRY = True
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_IMPORTS = ("accounts.services", "mailings")
 
 
 AUTH_USER_MODEL = 'accounts.User'
 
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -193,7 +186,6 @@ DEFAULT_FROM_EMAIL = 'foodOnline Marketplace'
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # gdal
-
 os.environ['PATH'] = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo') + ';' + os.environ['PATH']
 os.environ['PROJ_LIB'] = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo/data/proj') + ';' + os.environ['PATH']
 GDAL_LIBRARY_PATH = os.path.join(BASE_DIR, 'venv/lib/site-packages/osgeo/gdal304.dll')
